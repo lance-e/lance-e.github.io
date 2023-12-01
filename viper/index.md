@@ -33,7 +33,7 @@ go get github.com/spf13/viper
 
 8.显示配置值
 
-##### 四.viper可以做什么？
+##### 三.viper可以做什么？
 
 1.查找，加载和反序列化json,toml,yaml,hcl,ini,envfile,java properties格式的配置文件。
 
@@ -45,7 +45,7 @@ go get github.com/spf13/viper
 
 5.当用户提供与默认值相同的命令行或配置文件时，可以很容易的分辨出它们之间的区别。
 
-##### 五.viper优先级
+##### 四.viper优先级
 
 (从高到低)
 
@@ -61,7 +61,7 @@ go get github.com/spf13/viper
 
 6.默认值
 
-##### 六.将值存入viper
+##### 五.将值存入viper
 
 ###### 1.设置默认值：
 
@@ -197,7 +197,7 @@ viper.GetBool("verbose") // true
 
 (以后有待补充)
 
-##### 七.从viper获取值
+##### 六.从viper获取值
 
 常用根据值类型获取值的方法：
 
@@ -416,13 +416,13 @@ Viper在后台使用[github.com/mitchellh/mapstructure](https://github.com/mitch
 
 通过AllSettions()方法，将所有设置键值对以map的形式返回
 
-##### 八.使用单个viper实例
+##### 七.使用单个viper实例
 
 以上例子直接调用函数，都是viper的单例模式，其底层则是已经声明了一个viper对象的全局变量，且已经用New()函数初始化，函数里面都是该viper对象调用对应的方法。
 
 这些函数都是viper单例模式的封装，使用户更加方便地使用viper。
 
-##### 九.使用多个viper实例
+##### 八.使用多个viper实例
 
 ~~~go
 //使用New函数进行初始化一个viper对象
@@ -435,7 +435,7 @@ y.SetDefault("ContentDir", "foobar")
 
 ~~~
 
-##### 十.使用viper配置mysql示例：
+##### 九.使用viper配置mysql示例：
 
 配置文件:config.yaml
 
