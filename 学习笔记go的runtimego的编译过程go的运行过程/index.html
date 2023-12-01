@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>学习笔记：Go的runtime，Go的编译过程，Go的运行过程 - share knowledge</title><meta name="Description" content="记录对runtime，编译，运行的学习笔记"><meta property="og:title" content="学习笔记：Go的runtime，Go的编译过程，Go的运行过程" />
+<meta property="og:description" content="记录对runtime，编译，运行的学习笔记" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://lance547.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0go%E7%9A%84runtimego%E7%9A%84%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8Bgo%E7%9A%84%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B/" /><meta property="og:image" content="https://lance547.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-12-01T18:05:39+08:00" />
+<meta property="article:modified_time" content="2023-12-01T18:05:39+08:00" /><meta property="og:site_name" content="lance&#39;s blog" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://lance547.github.io/logo.png"/>
+
+<meta name="twitter:title" content="学习笔记：Go的runtime，Go的编译过程，Go的运行过程"/>
+<meta name="twitter:description" content="记录对runtime，编译，运行的学习笔记"/>
+<meta name="twitter:site" content="@xxxx"/>
+<meta name="application-name" content="LoveIt">
+<meta name="apple-mobile-web-app-title" content="LoveIt"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://lance547.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0go%E7%9A%84runtimego%E7%9A%84%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8Bgo%E7%9A%84%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B/" /><link rel="prev" href="https://lance547.github.io/first_post/" /><link rel="next" href="https://lance547.github.io/go%E7%9A%84%E9%83%A8%E5%88%86%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E7%9A%84%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "学习笔记：Go的runtime，Go的编译过程，Go的运行过程",
+        "inLanguage": "en",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/lance547.github.io\/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0go%E7%9A%84runtimego%E7%9A%84%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8Bgo%E7%9A%84%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B\/"
+        },"image": ["https:\/\/lance547.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "Go底层","wordcount":  128 ,
+        "url": "https:\/\/lance547.github.io\/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0go%E7%9A%84runtimego%E7%9A%84%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8Bgo%E7%9A%84%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B\/","datePublished": "2023-12-01T18:05:39+08:00","dateModified": "2023-12-01T18:05:39+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
+            "@type": "Organization",
+            "name": "xxxx","logo": "https:\/\/lance547.github.io\/images\/avatar.png"},"author": {
+                "@type": "Person",
+                "name": "lance"
+            },"description": "记录对runtime，编译，运行的学习笔记"
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="share knowledge"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw' aria-hidden='true'></i></span><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/categories/documentation/"> Docs </a><a class="menu-item" href="/about/"> About </a><a class="menu-item" href="https://github.com/dillonzq/LoveIt" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a><a href="javascript:void(0);" class="menu-item language" title="Select Language">
+                    <i class="fa fa-globe" aria-hidden="true"></i>                      
+                    <select class="language-select" id="language-select-desktop" onchange="location = this.value;"><option value="/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0go%E7%9A%84runtimego%E7%9A%84%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8Bgo%E7%9A%84%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B/" selected>English</option></select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="share knowledge"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw' aria-hidden='true'></i></span><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/categories/documentation/" title="">Docs</a><a class="menu-item" href="/about/" title="">About</a><a class="menu-item" href="https://github.com/dillonzq/LoveIt" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a><a href="javascript:void(0);" class="menu-item" title="Select Language">
+                    <i class="fa fa-globe fa-fw" aria-hidden="true"></i>
+                    <select class="language-select" onchange="location = this.value;"><option value="/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0go%E7%9A%84runtimego%E7%9A%84%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8Bgo%E7%9A%84%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B/" selected>English</option></select>
+                </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">学习笔记：Go的runtime，Go的编译过程，Go的运行过程</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>lance</a></span>&nbsp;<span class="post-category">included in <a href="/categories/go/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Go</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-12-01">2023-12-01</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;128 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;One minute&nbsp;<span id="/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0go%E7%9A%84runtimego%E7%9A%84%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8Bgo%E7%9A%84%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B/" class="leancloud_visitors" data-flag-title="学习笔记：Go的runtime，Go的编译过程，Go的运行过程">
+                        <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;views
+                    </span>&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#什么是runtime">什么是Runtime？</a></li>
+        <li><a href="#go的runtime特点">Go的Runtime特点：</a></li>
+        <li><a href="#go的runtime能力">Go的Runtime能力：</a></li>
+        <li><a href="#go的runtime其他特点">Go的Runtime其他特点：</a></li>
+        <li><a href="#总结">总结</a></li>
+      </ul>
+    </li>
+    <li><a href="#go是如何编译的">Go是如何编译的？</a>
+      <ul>
+        <li><a href="#编译命令">编译命令：</a></li>
+        <li><a href="#编译过程">编译过程：</a>
+          <ul>
+            <li><a href="#词法分析">词法分析：</a></li>
+            <li><a href="#句法分析">句法分析：</a></li>
+            <li><a href="#语义分析">语义分析：</a></li>
+            <li><a href="#中间码生成ssa">中间码生成（SSA）</a></li>
+            <li><a href="#代码优化">代码优化：</a></li>
+            <li><a href="#机器码生成">机器码生成：</a></li>
+            <li><a href="#链接">链接:</a></li>
+            <li><a href="#总结-1">总结：</a></li>
+          </ul>
+        </li>
+        <li><a href="#go程序是如何运行的">Go程序是如何运行的？</a>
+          <ul>
+            <li><a href="#a程序的入口是main方法吗">A:程序的入口是main方法吗？：</a></li>
+            <li><a href="#b运行步骤">B:运行步骤：</a>
+              <ul>
+                <li><a href="#1读取命令行参数">1.读取命令行参数</a></li>
+                <li><a href="#2初始化g0执行栈">2.初始化g0执行栈</a></li>
+                <li><a href="#3运行时检测">3.运行时检测</a></li>
+                <li><a href="#4参数初始化-runtimeargs">4.参数初始化 runtime.args</a></li>
+                <li><a href="#5调度器初始化-runtimeschedinit">5.调度器初始化 runtime.schedinit</a></li>
+                <li><a href="#6创建主协程">6.创建主协程</a></li>
+                <li><a href="#7初始化-m">7.初始化 M</a></li>
+                <li><a href="#8主协程执行主函数">8.主协程执行主函数</a></li>
+              </ul>
+            </li>
+            <li><a href="#c总结">C:总结</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h3 id="什么是runtime">什么是Runtime？</h3>
+<p>就是程序的运行环境。</p>
+<h3 id="go的runtime特点">Go的Runtime特点：</h3>
+<p>1.没有虚拟机的概念</p>
+<p>2.Runtime作为程序的一部分打包进二进制文件</p>
+<p>3.Runtime随用户程序一起运行</p>
+<p>4.Runtime与用户程序没有明显界限，直接通过函数调用</p>
+<h3 id="go的runtime能力">Go的Runtime能力：</h3>
+<p>1.内存管理能力</p>
+<p>2.垃圾回收能力（GC）</p>
+<p>3.超强的并发能力(协程调度)</p>
+<h3 id="go的runtime其他特点">Go的Runtime其他特点：</h3>
+<p>1.Runtime有一定的屏蔽系统调用能力</p>
+<p>2.一些go的关键字其实是Runtime下的函数</p>
+<h3 id="总结">总结</h3>
+<p>1.Go的Runtime负责内存管理，垃圾回收，协程调度</p>
+<p>2.Go的Runtime被编译为用户程序的一部分，一起运行</p>
+<h2 id="go是如何编译的">Go是如何编译的？</h2>
+<h3 id="编译命令">编译命令：</h3>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="k">go</span> <span class="nx">build</span> <span class="o">-</span><span class="nx">n</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="编译过程">编译过程：</h3>
+<p>词法分析&mdash;&mdash;&gt;句法分析&mdash;&mdash;-&gt;语义分析&mdash;&mdash;-&gt;中间码生成&mdash;&mdash;-&gt;代码优化&mdash;&mdash;-&gt;机器码生成&mdash;&mdash;&mdash;&gt;链接</p>
+<h4 id="词法分析">词法分析：</h4>
+<p>1.将源代码分析成Token</p>
+<p>2.Token是代码中的最小语义结构</p>
+<h4 id="句法分析">句法分析：</h4>
+<p>1.Token序列经过处理，变成语法树（抽象语法树ast）</p>
+<h4 id="语义分析">语义分析：</h4>
+<p>1.类型检查</p>
+<p>2.类型推断</p>
+<p>3.查看类型是否匹配</p>
+<p>4.函数调用内联</p>
+<p>5.逃逸分析</p>
+<h4 id="中间码生成ssa">中间码生成（SSA）</h4>
+<p>1.为了处理不同平台的差异，先生成中间代码（SSA）</p>
+<p>2.查看从代码到SSA中间码的整个过程</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nv">$env</span>:GOSSAFUNC<span class="o">=</span><span class="s2">&#34;main&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="nb">export</span> <span class="nv">GOSSAFUNC</span><span class="o">=</span>main
+</span></span><span class="line"><span class="cl">go build
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="代码优化">代码优化：</h4>
+<p>各个步骤都会存在</p>
+<h4 id="机器码生成">机器码生成：</h4>
+<p>1.先生成plan9汇编代码</p>
+<p>2.最后编译为机器码</p>
+<p>3.输出的机器码为.a文件</p>
+<p>4.查看plan9汇编代码：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="k">go</span> <span class="nx">build</span> <span class="o">-</span><span class="nx">gcflags</span> <span class="o">-</span><span class="nx">S</span> <span class="nx">main</span><span class="p">.</span><span class="k">go</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="链接">链接:</h4>
+<p>将各个包进行链接，包括runtime</p>
+<h4 id="总结-1">总结：</h4>
+<p>1.编译前端：词法分析，句法分析，语义分析</p>
+<p>2.编译后端：中间码生成，代码优化，机器码生成</p>
+<p>3.链接</p>
+<h3 id="go程序是如何运行的">Go程序是如何运行的？</h3>
+<h4 id="a程序的入口是main方法吗">A:程序的入口是main方法吗？：</h4>
+<p>不是的。是runtime包下的rt0_XXX.s(不是go程序，是一个汇编语言)</p>
+<h4 id="b运行步骤">B:运行步骤：</h4>
+<h5 id="1读取命令行参数">1.读取命令行参数</h5>
+<p>复制参数数量argc和参数值argv到栈上</p>
+<h5 id="2初始化g0执行栈">2.初始化g0执行栈</h5>
+<p>a.g0是为了调度协程而产生的协程</p>
+<p>b.g0是每个Go程序的第一个协程</p>
+<h5 id="3运行时检测">3.运行时检测</h5>
+<p>a.检查各种类型的长度</p>
+<p>b.检查指针操作</p>
+<p>c.检查结构体字段的偏移量</p>
+<p>d.检查atomic原子操作</p>
+<p>e.检查CAS操作</p>
+<p>f.检查栈大小是否是2的幂次</p>
+<h5 id="4参数初始化-runtimeargs">4.参数初始化 runtime.args</h5>
+<p>a.对命令行中的参数进行处理</p>
+<p>b.参数数量赋值给argc int32</p>
+<p>c.参数值赋值给argv **byte</p>
+<h5 id="5调度器初始化-runtimeschedinit">5.调度器初始化 runtime.schedinit</h5>
+<p>a.全局栈空间内存分配</p>
+<p>b.加载命令行参数到 os.Args</p>
+<p>c.堆内存空间的初始化</p>
+<p>d.加载操作系统环境变量</p>
+<p>e.初始化当前系统线程</p>
+<p>f.垃圾回收器的参数初始化(GC)</p>
+<p>g.算法初始化(map,hash)</p>
+<p>h.设置 process 数量</p>
+<h5 id="6创建主协程">6.创建主协程</h5>
+<p>a.创建一个新的协程，执行 runtime.main</p>
+<p>b.放入调度器等待调度</p>
+<h5 id="7初始化-m">7.初始化 M</h5>
+<p>a.初始化一个M，用来调度主协程</p>
+<h5 id="8主协程执行主函数">8.主协程执行主函数</h5>
+<p>a.执行runtimem 包中的 init 方法</p>
+<p>b.启动 GC 垃圾收集器</p>
+<p>c.执行用户包依赖的 init 方法</p>
+<p>d.执行用户主程序 main.main() (main包中的main函数)</p>
+<h4 id="c总结">C:总结</h4>
+<p>1.Go 启动时经历了检查，各种初始化，初始化协程调度的过程</p>
+<p>2.main.main() 也是在协程中运行的</p></div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2023-12-01</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0go%E7%9A%84runtimego%E7%9A%84%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8Bgo%E7%9A%84%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B/index.md" target="_blank">Read Markdown</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://lance547.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0go%E7%9A%84runtimego%E7%9A%84%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8Bgo%E7%9A%84%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B/" data-title="学习笔记：Go的runtime，Go的编译过程，Go的运行过程" data-via="xxxx" data-hashtags="Go底层"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://lance547.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0go%E7%9A%84runtimego%E7%9A%84%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8Bgo%E7%9A%84%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B/" data-hashtag="Go底层"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://lance547.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0go%E7%9A%84runtimego%E7%9A%84%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8Bgo%E7%9A%84%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B/" data-title="学习笔记：Go的runtime，Go的编译过程，Go的运行过程"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://lance547.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0go%E7%9A%84runtimego%E7%9A%84%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8Bgo%E7%9A%84%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B/" data-title="学习笔记：Go的runtime，Go的编译过程，Go的运行过程"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://lance547.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0go%E7%9A%84runtimego%E7%9A%84%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8Bgo%E7%9A%84%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B/" data-title="学习笔记：Go的runtime，Go的编译过程，Go的运行过程"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/go%E5%BA%95%E5%B1%82/">Go底层</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/first_post/" class="prev" rel="prev" title="first post in hugo"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>first post in hugo</a>
+            <a href="/go%E7%9A%84%E9%83%A8%E5%88%86%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E7%9A%84%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0/" class="next" rel="next" title="Go的部分基本数据类型的底层实现">Go的部分基本数据类型的底层实现<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+<div id="comments"><div id="valine" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://valine.js.org/">Valine</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.120.4">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">lance</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/valine/valine.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/valine@1.5.0/dist/Valine.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/algoliasearch@4.13.1/dist/algoliasearch-lite.umd.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typeit@8.6.0/dist/index.umd.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"valine":{"appId":"QGzwQXOqs5JOhN4RGPOkR2mR-MdYXbMMI","appKey":"WBmoGyJtbqUswvfLh6L8iEBr","avatar":"mp","el":"#valine","emojiCDN":"https://cdn.jsdelivr.net/npm/emoji-datasource-google@14.0.0/img/google/64/","emojiMaps":{"100":"1f4af.png","alien":"1f47d.png","anger":"1f4a2.png","angry":"1f620.png","anguished":"1f627.png","astonished":"1f632.png","black_heart":"1f5a4.png","blue_heart":"1f499.png","blush":"1f60a.png","bomb":"1f4a3.png","boom":"1f4a5.png","broken_heart":"1f494.png","brown_heart":"1f90e.png","clown_face":"1f921.png","cold_face":"1f976.png","cold_sweat":"1f630.png","confounded":"1f616.png","confused":"1f615.png","cry":"1f622.png","crying_cat_face":"1f63f.png","cupid":"1f498.png","dash":"1f4a8.png","disappointed":"1f61e.png","disappointed_relieved":"1f625.png","dizzy":"1f4ab.png","dizzy_face":"1f635.png","drooling_face":"1f924.png","exploding_head":"1f92f.png","expressionless":"1f611.png","face_vomiting":"1f92e.png","face_with_cowboy_hat":"1f920.png","face_with_hand_over_mouth":"1f92d.png","face_with_head_bandage":"1f915.png","face_with_monocle":"1f9d0.png","face_with_raised_eyebrow":"1f928.png","face_with_rolling_eyes":"1f644.png","face_with_symbols_on_mouth":"1f92c.png","face_with_thermometer":"1f912.png","fearful":"1f628.png","flushed":"1f633.png","frowning":"1f626.png","ghost":"1f47b.png","gift_heart":"1f49d.png","green_heart":"1f49a.png","grimacing":"1f62c.png","grin":"1f601.png","grinning":"1f600.png","hankey":"1f4a9.png","hear_no_evil":"1f649.png","heart":"2764-fe0f.png","heart_decoration":"1f49f.png","heart_eyes":"1f60d.png","heart_eyes_cat":"1f63b.png","heartbeat":"1f493.png","heartpulse":"1f497.png","heavy_heart_exclamation_mark_ornament":"2763-fe0f.png","hole":"1f573-fe0f.png","hot_face":"1f975.png","hugging_face":"1f917.png","hushed":"1f62f.png","imp":"1f47f.png","innocent":"1f607.png","japanese_goblin":"1f47a.png","japanese_ogre":"1f479.png","joy":"1f602.png","joy_cat":"1f639.png","kiss":"1f48b.png","kissing":"1f617.png","kissing_cat":"1f63d.png","kissing_closed_eyes":"1f61a.png","kissing_heart":"1f618.png","kissing_smiling_eyes":"1f619.png","laughing":"1f606.png","left_speech_bubble":"1f5e8-fe0f.png","love_letter":"1f48c.png","lying_face":"1f925.png","mask":"1f637.png","money_mouth_face":"1f911.png","nauseated_face":"1f922.png","nerd_face":"1f913.png","neutral_face":"1f610.png","no_mouth":"1f636.png","open_mouth":"1f62e.png","orange_heart":"1f9e1.png","partying_face":"1f973.png","pensive":"1f614.png","persevere":"1f623.png","pleading_face":"1f97a.png","pouting_cat":"1f63e.png","purple_heart":"1f49c.png","rage":"1f621.png","relaxed":"263a-fe0f.png","relieved":"1f60c.png","revolving_hearts":"1f49e.png","right_anger_bubble":"1f5ef-fe0f.png","robot_face":"1f916.png","rolling_on_the_floor_laughing":"1f923.png","scream":"1f631.png","scream_cat":"1f640.png","see_no_evil":"1f648.png","shushing_face":"1f92b.png","skull":"1f480.png","skull_and_crossbones":"2620-fe0f.png","sleeping":"1f634.png","sleepy":"1f62a.png","slightly_frowning_face":"1f641.png","slightly_smiling_face":"1f642.png","smile":"1f604.png","smile_cat":"1f638.png","smiley":"1f603.png","smiley_cat":"1f63a.png","smiling_face_with_3_hearts":"1f970.png","smiling_imp":"1f608.png","smirk":"1f60f.png","smirk_cat":"1f63c.png","sneezing_face":"1f927.png","sob":"1f62d.png","space_invader":"1f47e.png","sparkling_heart":"1f496.png","speak_no_evil":"1f64a.png","speech_balloon":"1f4ac.png","star-struck":"1f929.png","stuck_out_tongue":"1f61b.png","stuck_out_tongue_closed_eyes":"1f61d.png","stuck_out_tongue_winking_eye":"1f61c.png","sunglasses":"1f60e.png","sweat":"1f613.png","sweat_drops":"1f4a6.png","sweat_smile":"1f605.png","thinking_face":"1f914.png","thought_balloon":"1f4ad.png","tired_face":"1f62b.png","triumph":"1f624.png","two_hearts":"1f495.png","unamused":"1f612.png","upside_down_face":"1f643.png","weary":"1f629.png","white_frowning_face":"2639-fe0f.png","white_heart":"1f90d.png","wink":"1f609.png","woozy_face":"1f974.png","worried":"1f61f.png","yawning_face":"1f971.png","yellow_heart":"1f49b.png","yum":"1f60b.png","zany_face":"1f92a.png","zipper_mouth_face":"1f910.png","zzz":"1f4a4.png"},"enableQQ":false,"highlight":true,"lang":"en","pageSize":10,"placeholder":"Your comment ...","recordIP":true,"serverURLs":"https://leancloud.hugoloveit.com","visitor":true}},"data":{"id-1":"lance's blog","id-2":"lance's blog"},"search":{"algoliaAppID":"PASDMWALPK","algoliaIndex":"index.en","algoliaSearchKey":"b42948e51daaa93df92381c8e2ac0f93","highlightTag":"em","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"algolia"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
