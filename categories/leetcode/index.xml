@@ -1,0 +1,16 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>leetcode - Category - share knowledge</title>
+        <link>https://lance547.github.io/categories/leetcode/</link>
+        <description>leetcode - Category - share knowledge</description>
+        <generator>Hugo -- gohugo.io</generator><language>en</language><managingEditor>437653103@qq.com (lance)</managingEditor>
+            <webMaster>437653103@qq.com (lance)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><lastBuildDate>Tue, 19 Dec 2023 00:25:55 &#43;0800</lastBuildDate><atom:link href="https://lance547.github.io/categories/leetcode/" rel="self" type="application/rss+xml" /><item>
+    <title>Leetcode 1，21题 题解</title>
+    <link>https://lance547.github.io/leetcode%E9%A2%98%E8%A7%A3/</link>
+    <pubDate>Tue, 19 Dec 2023 00:25:55 &#43;0800</pubDate>
+    <author>lance</author>
+    <guid>https://lance547.github.io/leetcode%E9%A2%98%E8%A7%A3/</guid>
+    <description><![CDATA[leetcode第一，二十一题题解]]></description>
+</item>
+</channel>
+</rss>
