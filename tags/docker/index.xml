@@ -1,0 +1,16 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>docker - Tag - share knowledge</title>
+        <link>https://lance547.github.io/tags/docker/</link>
+        <description>docker - Tag - share knowledge</description>
+        <generator>Hugo -- gohugo.io</generator><language>en</language><managingEditor>437653103@qq.com (lance)</managingEditor>
+            <webMaster>437653103@qq.com (lance)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><lastBuildDate>Sun, 24 Dec 2023 00:01:15 &#43;0800</lastBuildDate><atom:link href="https://lance547.github.io/tags/docker/" rel="self" type="application/rss+xml" /><item>
+    <title>Docker基础知识总结</title>
+    <link>https://lance547.github.io/docker%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E6%80%BB%E7%BB%93/</link>
+    <pubDate>Sun, 24 Dec 2023 00:01:15 &#43;0800</pubDate>
+    <author>lance</author>
+    <guid>https://lance547.github.io/docker%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E6%80%BB%E7%BB%93/</guid>
+    <description><![CDATA[docker基础命令，docker的核心技术，dockerfile编写]]></description>
+</item>
+</channel>
+</rss>
