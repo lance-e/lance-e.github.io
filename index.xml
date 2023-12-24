@@ -4,9 +4,17 @@
         <link>https://lance547.github.io/</link>
         <description>share</description>
         <generator>Hugo -- gohugo.io</generator><language>en</language><managingEditor>437653103@qq.com (lance)</managingEditor>
-            <webMaster>437653103@qq.com (lance)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><lastBuildDate>Sun, 24 Dec 2023 00:01:15 &#43;0800</lastBuildDate>
+            <webMaster>437653103@qq.com (lance)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><lastBuildDate>Sun, 24 Dec 2023 23:29:39 &#43;0800</lastBuildDate>
             <atom:link href="https://lance547.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
+    <title>学习笔记：数据结构与算法(二)</title>
+    <link>https://lance547.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E4%BA%8C/</link>
+    <pubDate>Sun, 24 Dec 2023 23:29:39 &#43;0800</pubDate>
+    <author>lance</author>
+    <guid>https://lance547.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E4%BA%8C/</guid>
+    <description><![CDATA[学习笔记]]></description>
+</item>
+<item>
     <title>Docker基础知识总结</title>
     <link>https://lance547.github.io/docker%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E6%80%BB%E7%BB%93/</link>
     <pubDate>Sun, 24 Dec 2023 00:01:15 &#43;0800</pubDate>
@@ -56,10 +64,10 @@
 </item>
 <item>
     <title>学习笔记：数据结构与算法(一)</title>
-    <link>https://lance547.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/</link>
+    <link>https://lance547.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E4%B8%80/</link>
     <pubDate>Fri, 01 Dec 2023 18:12:35 &#43;0800</pubDate>
     <author>lance</author>
-    <guid>https://lance547.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/</guid>
+    <guid>https://lance547.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E4%B8%80/</guid>
     <description><![CDATA[学习笔记]]></description>
 </item>
 <item>
@@ -77,14 +85,6 @@
     <author>lance</author>
     <guid>https://lance547.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0go%E7%9A%84runtimego%E7%9A%84%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8Bgo%E7%9A%84%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B/</guid>
     <description><![CDATA[记录对runtime，编译，运行的学习笔记]]></description>
-</item>
-<item>
-    <title>first post in hugo</title>
-    <link>https://lance547.github.io/first_post/</link>
-    <pubDate>Fri, 01 Dec 2023 17:11:58 &#43;0800</pubDate>
-    <author>lance</author>
-    <guid>https://lance547.github.io/first_post/</guid>
-    <description><![CDATA[第一篇博客，基于hugo]]></description>
 </item>
 </channel>
 </rss>
