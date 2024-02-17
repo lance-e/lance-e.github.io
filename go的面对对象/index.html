@@ -7,19 +7,19 @@
         <title>Go的面对对象 - share knowledge</title><meta name="Description" content="go面对对象的简短总结"><meta property="og:title" content="Go的面对对象" />
 <meta property="og:description" content="go面对对象的简短总结" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://lance547.github.io/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1/" /><meta property="og:image" content="https://lance547.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="og:url" content="https://lance-e.github.io/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1/" /><meta property="og:image" content="https://lance-e.github.io/logo.png"/><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2023-12-01T18:15:19+08:00" />
 <meta property="article:modified_time" content="2023-12-01T18:15:19+08:00" /><meta property="og:site_name" content="lance&#39;s blog" />
 
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:image" content="https://lance547.github.io/logo.png"/>
+<meta name="twitter:image" content="https://lance-e.github.io/logo.png"/>
 
 <meta name="twitter:title" content="Go的面对对象"/>
 <meta name="twitter:description" content="go面对对象的简短总结"/>
 <meta name="application-name" content="lance&#39;s blog">
 <meta name="apple-mobile-web-app-title" content="lance&#39;s blog"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://lance547.github.io/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1/" /><link rel="prev" href="https://lance547.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E4%B8%80/" /><link rel="next" href="https://lance547.github.io/viper/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://lance-e.github.io/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1/" /><link rel="prev" href="https://lance-e.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E4%B8%80/" /><link rel="next" href="https://lance-e.github.io/viper/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
         <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
         <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
     {
@@ -29,9 +29,9 @@
         "inLanguage": "en",
         "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": "https:\/\/lance547.github.io\/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1\/"
-        },"image": ["https:\/\/lance547.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "Go特性","wordcount":  28 ,
-        "url": "https:\/\/lance547.github.io\/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1\/","datePublished": "2023-12-01T18:15:19+08:00","dateModified": "2023-12-01T18:15:19+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
+            "@id": "https:\/\/lance-e.github.io\/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1\/"
+        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "Go特性","wordcount":  28 ,
+        "url": "https:\/\/lance-e.github.io\/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1\/","datePublished": "2023-12-01T18:15:19+08:00","dateModified": "2023-12-01T18:15:19+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
             "@type": "Organization",
             "name": "lance","logo": "https:\/\/avatars.githubusercontent.com\/u\/139835134?s=400\u0026u=821ed61ec1049b862844e4b578ccbc46f274d65d\u0026v=4"},"author": {
                 "@type": "Person",
@@ -179,7 +179,7 @@
                             <a class="link-to-markdown" href="/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1/index.md" target="_blank">Read Markdown</a>
                         </span></div>
             <div class="post-info-share">
-                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://lance547.github.io/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1/" data-title="Go的面对对象" data-hashtags="Go特性"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://lance547.github.io/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1/" data-hashtag="Go特性"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://lance547.github.io/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1/" data-title="Go的面对对象"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://lance547.github.io/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1/" data-title="Go的面对对象"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://lance547.github.io/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1/" data-title="Go的面对对象"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://lance-e.github.io/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1/" data-title="Go的面对对象" data-hashtags="Go特性"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://lance-e.github.io/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1/" data-hashtag="Go特性"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://lance-e.github.io/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1/" data-title="Go的面对对象"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://lance-e.github.io/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1/" data-title="Go的面对对象"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://lance-e.github.io/go%E7%9A%84%E9%9D%A2%E5%AF%B9%E5%AF%B9%E8%B1%A1/" data-title="Go的面对对象"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
             </div>
         </div>
     </div>
