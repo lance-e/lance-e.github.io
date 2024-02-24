@@ -4,39 +4,39 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noodp" />
-        <title>2023年度总结 - share knowledge</title><meta name="Description" content="我的2023年度总结"><meta property="og:title" content="2023年度总结" />
-<meta property="og:description" content="我的2023年度总结" />
+        <title>从0到1写docker之概念理解 - share knowledge</title><meta name="Description" content="理解docker的三大底座概念"><meta property="og:title" content="从0到1写docker之概念理解" />
+<meta property="og:description" content="理解docker的三大底座概念" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://lance-e.github.io/2023%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/" /><meta property="og:image" content="https://lance-e.github.io/logo.png"/><meta property="article:section" content="posts" />
-<meta property="article:published_time" content="2024-01-02T12:42:25+08:00" />
-<meta property="article:modified_time" content="2024-01-02T12:42:25+08:00" /><meta property="og:site_name" content="lance&#39;s blog" />
+<meta property="og:url" content="https://lance-e.github.io/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3/" /><meta property="og:image" content="https://lance-e.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-02-24T20:41:30+08:00" />
+<meta property="article:modified_time" content="2024-02-24T20:41:30+08:00" /><meta property="og:site_name" content="lance&#39;s blog" />
 
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:image" content="https://lance-e.github.io/logo.png"/>
 
-<meta name="twitter:title" content="2023年度总结"/>
-<meta name="twitter:description" content="我的2023年度总结"/>
+<meta name="twitter:title" content="从0到1写docker之概念理解"/>
+<meta name="twitter:description" content="理解docker的三大底座概念"/>
 <meta name="application-name" content="lance&#39;s blog">
 <meta name="apple-mobile-web-app-title" content="lance&#39;s blog"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://lance-e.github.io/2023%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/" /><link rel="prev" href="https://lance-e.github.io/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E4%BA%8C/" /><link rel="next" href="https://lance-e.github.io/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://lance-e.github.io/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3/" /><link rel="prev" href="https://lance-e.github.io/2023%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/" /><link rel="next" href="https://lance-e.github.io/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%BA%8C%E6%9E%84%E5%BB%BA%E7%AE%80%E6%98%93%E5%AE%B9%E5%99%A8/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
         <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
         <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
     {
         "@context": "http://schema.org",
         "@type": "BlogPosting",
-        "headline": "2023年度总结",
+        "headline": "从0到1写docker之概念理解",
         "inLanguage": "en",
         "mainEntityOfPage": {
             "@type": "WebPage",
-            "@id": "https:\/\/lance-e.github.io\/2023%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93\/"
-        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "杂事","wordcount":  39 ,
-        "url": "https:\/\/lance-e.github.io\/2023%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93\/","datePublished": "2024-01-02T12:42:25+08:00","dateModified": "2024-01-02T12:42:25+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
+            "@id": "https:\/\/lance-e.github.io\/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3\/"
+        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "container","wordcount":  52 ,
+        "url": "https:\/\/lance-e.github.io\/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3\/","datePublished": "2024-02-24T20:41:30+08:00","dateModified": "2024-02-24T20:41:30+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
             "@type": "Organization",
             "name": "lance","logo": "https:\/\/avatars.githubusercontent.com\/u\/139835134?s=400\u0026u=821ed61ec1049b862844e4b578ccbc46f274d65d\u0026v=4"},"author": {
                 "@type": "Person",
                 "name": "lance"
-            },"description": "我的2023年度总结"
+            },"description": "理解docker的三大底座概念"
     }
     </script></head>
     <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
@@ -62,7 +62,7 @@
                     <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
                 </a><a href="javascript:void(0);" class="menu-item language" title="Select Language">
                     <i class="fa fa-globe" aria-hidden="true"></i>                      
-                    <select class="language-select" id="language-select-desktop" onchange="location = this.value;"><option value="/2023%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/" selected>English</option></select>
+                    <select class="language-select" id="language-select-desktop" onchange="location = this.value;"><option value="/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3/" selected>English</option></select>
                 </a></div>
         </div>
     </div>
@@ -96,7 +96,7 @@
                 <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
             </a><a href="javascript:void(0);" class="menu-item" title="Select Language">
                     <i class="fa fa-globe fa-fw" aria-hidden="true"></i>
-                    <select class="language-select" onchange="location = this.value;"><option value="/2023%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/" selected>English</option></select>
+                    <select class="language-select" onchange="location = this.value;"><option value="/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3/" selected>English</option></select>
                 </a></div>
     </div>
 </header><div class="search-dropdown desktop">
@@ -108,10 +108,10 @@
                 <div class="container"><div class="toc" id="toc-auto">
             <h2 class="toc-title">Contents</h2>
             <div class="toc-content" id="toc-content-auto"></div>
-        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">2023年度总结</h1><div class="post-meta">
-            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>lance</a></span>&nbsp;<span class="post-category">included in <a href="/categories/%E6%9D%82%E4%BA%8B/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>杂事</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-01-02">2024-01-02</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;39 words&nbsp;
-                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;One minute&nbsp;<span id="/2023%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/" class="leancloud_visitors" data-flag-title="2023年度总结">
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">从0到1写docker之概念理解</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>lance</a></span>&nbsp;<span class="post-category">included in <a href="/categories/%E4%BA%91%E5%8E%9F%E7%94%9F/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>云原生</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-02-24">2024-02-24</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;52 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;One minute&nbsp;<span id="/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3/" class="leancloud_visitors" data-flag-title="从0到1写docker之概念理解">
                         <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;views
                     </span>&nbsp;</div>
         </div><div class="details toc" id="toc-static"  data-kept="">
@@ -121,95 +121,90 @@
                 </div>
                 <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
   <ul>
-    <li>
+    <li><a href="#docker-三大核心技术">docker 三大核心技术：</a>
       <ul>
-        <li><a href="#前言">前言</a></li>
-        <li><a href="#经历">经历</a>
+        <li>
           <ul>
             <li>
               <ul>
-                <li><a href="#高考">高考</a></li>
-                <li><a href="#暑假">暑假</a></li>
-                <li><a href="#新学期">新学期</a></li>
-              </ul>
-            </li>
-          </ul>
-        </li>
-        <li><a href="#2024上半年的目标">2024上半年的目标</a>
-          <ul>
-            <li>
-              <ul>
-                <li>
-                  <ul>
-                    <li><a href="#to-be-continue">to be continue&hellip;</a></li>
-                  </ul>
-                </li>
+                <li><a href="#namespace">Namespace:</a></li>
+                <li><a href="#cgroups">Cgroups:</a></li>
+                <li><a href="#union-file-system">union file system:</a></li>
               </ul>
             </li>
           </ul>
         </li>
       </ul>
     </li>
+    <li><a href="#参考文档">参考文档：</a></li>
   </ul>
 </nav></div>
-            </div><div class="content" id="content"><h1 id="2023年度总结">2023年度总结🥳</h1>
-<h3 id="前言">前言</h3>
-<p>看到很多学长都在写年度总结，那我也跟个风吧，记录一下过去一年的收获和感悟吧。马上就是期末周，太多东西要学，后面应该没多少时间，索性就现在写了。</p>
-<h3 id="经历">经历</h3>
-<h5 id="高考">高考</h5>
-<p>现在回想起来好像教室，食堂，寝室三点一线，也没有什么能回想的起来了。
-高考发挥正常，来了重邮🥹，对自己的实力还是有预期，也没什么大不了了。</p>
-<h5 id="暑假">暑假</h5>
-<p>18年以来，可以说今年的暑假是最充实的一个暑假了😎。
-回想起往年的暑假都是天天打游戏，打得昏天黑地。今年的暑假还是学到了很多东西。
-刚考完高考，志愿填报全填的计算机专业，就准备进军互联网~~（不知道找工作时的自己会不会怪自己,互联网寒冬了）~~，开始网上找编程的教程学习，当时不知道要学什么编程语言，看网上推荐就开始学习python了。当时就看好了重邮，志愿一半都是重邮，就阴差阳错加了重邮的贴吧群，到处问学长学姐。
-群里有一个学姐主动加了我（人很好，但是是卖卡的），当时聊了很多，在她那里了解到了软工会学C++，于是我就放弃了学习python，转投C++。也在她那里正式了解到了红岩，蓝山，勤奋蜂等工作室，当时就对这些工作室产生了兴趣。
-在贴吧群也认识到了一个红岩的学长（红岩安卓的，现在是腾讯✌️😭），和他沟通之后，他直接建议我学go，docker，linux基础，mysql等等，给当时懵懂的我带来不小的震撼🫨。
-之后又了解到了一个同专业同级的大佬，此时我还在学C++的指针，他就已经会了python，C++，go，rust，更不用说数据库和docker那些了。本以为暑假学点C++，能开学薄纱同学，看来还是想多了🤡，哈哈哈哈。</p>
-<p>Q:暑假收获到了什么呢？
-A:一点点C++语法（至少学校的程序化结构设计的进度还没我快，虽然还讲了一些底层原理啥的，但还是觉得上课耽误学习），go的语法，和部分基础linux命令。另外还有一个驾驶证🪪。</p>
-<h5 id="新学期">新学期</h5>
-<p>加入了红岩和蓝山作为学员进一步学习，也了解到了两边的牛逼的学长（比如袁神，王鑫学长，紫雨哥，旭哥等等，此处省略一千字），红岩感觉压力有点大，毕竟要刷人，蓝山压力不是很大，而且还有大工位（对于挤在皇家里面生存的我来说太有诱惑力了）。
-根据暑假了解到的一些信息，我坚定地选择了毕业工作的道路，毕竟我也不想浪费两三年的时间去读研，最后本硕同薪的结果（要是一直都是现在这个互联网行情，说不定还找不到工作😭）。
-刚开学跟现在期末比起来变化确实很大，更多的是我的心态上，不得不说大学确实很容易让人堕落：
-刚开学那会确实学的很快，军训期间一直在看计算机网络，虽然没学多少。然后军训结束国庆放假，一个人守舍，把mysql系统刷了一遍，把表锁行锁啥的学了，就没学了，好像还有读写分离（但是现在就基本只用到简单的crud😅，其他的忘的差不多了）。然后跟着蓝山去年开源出来的课件，把redis和docker浅浅地过了一遍（因为浅，所以后面又学了一遍）。
-刚开始我对游戏根本不感兴趣，但是逐渐跟着室友一起打游戏，喜欢上了玩cs2。然后就花了很多时间来跟室友打游戏了，慢慢地也没有之前那么卷了，所以说寝室真的不适合学习。
-其他的也没啥好说的了&hellip;</p>
-<h3 id="2024上半年的目标">2024上半年的目标</h3>
-<p>1.把业务的菜名能学的都学了(这个就比较长远了)</p>
-<p>2.最近在尝试复刻一个docker🐳，尽量在寒假之前完成吧</p>
-<p>3.坚持在工作室的学习，加入一个工作室</p>
-<p>4.学习计算机基础四大件(最近在学习数据结构，争取快点学完吧)</p>
-<p>5.坚持每天都刷点leetcode(前提是先学完数据结构与算法)</p>
-<p>6.学习C++</p>
-<p>7.学习Rust🦀(最近是没时间学咯)</p>
-<p>8.找个女朋友🫣</p>
-<p>9.work &amp;&amp; life balance🥹</p>
-<h6 id="to-be-continue">to be continue&hellip;</h6></div><div class="post-footer" id="post-footer">
+            </div><div class="content" id="content"><h1 id="一概念理解">(一)概念理解</h1>
+<p><a href="https://github.com/lance-e/gocker" target="_blank" rel="noopener noreffer ">项目地址</a>
+欢迎folk，star，follow🥰，有问题欢迎提issue，pr</p>
+<h2 id="docker-三大核心技术">docker 三大核心技术：</h2>
+<h5 id="namespace">Namespace:</h5>
+<ul>
+<li>
+<p>UTS Namespace 主要用来隔离 nodename 和 domainname 两个系统标识</p>
+</li>
+<li>
+<p>IPC Namespace 用来隔离 System V IPC 和 POSIX message queues(进程间通信)</p>
+</li>
+<li>
+<p>PID Namespace是用来隔离进程 ID的</p>
+</li>
+<li>
+<p>MountNamespace用来隔离各个进程看到的挂载点视图</p>
+</li>
+<li>
+<p>User Namespace 主要是隔离用户的用户组 ID</p>
+</li>
+<li>
+<p>Network Namespace 是用来隔离网络设备、 IP地址端口 等网络械的 Namespace。</p>
+</li>
+</ul>
+<h5 id="cgroups">Cgroups:</h5>
+<p>四个重要的概念：tasks，cgroup，hierarchy，subsystem</p>
+<ul>
+<li>tasks:就是一个进程</li>
+<li>cgroup:控制族群，也就是一个按某种规定划分的进程组，cgroups使用的资源都是以控制族群为单位划分的</li>
+<li>hierarchy:层级，是由多个cgroup组成的树状关系，</li>
+<li>subsystem:资源子系统，相当于资源控制器，如cpu，memory子系统，必须附加到某个层级hierarchy才能起作用，</li>
+</ul>
+<h5 id="union-file-system">union file system:</h5>
+<p>把其他文件系统联合到一个联合挂载点的文件系统服务，具有写时复制和联合挂载的特性</p>
+<ul>
+<li>现在docker多采用的是overlayFS，包含四个部分，upper，lower，work，merged</li>
+</ul>
+<h2 id="参考文档">参考文档：</h2>
+<p>《自己动手写docker》</p>
+<p><a href="https://blog.csdn.net/qq_31960623/article/details/120260769" target="_blank" rel="noopener noreffer ">https://blog.csdn.net/qq_31960623/article/details/120260769</a></p>
+<p><a href="https://www.cnblogs.com/crazymakercircle/p/15400946.html#autoid-h3-2-2-0" target="_blank" rel="noopener noreffer ">https://www.cnblogs.com/crazymakercircle/p/15400946.html#autoid-h3-2-2-0</a></p></div><div class="post-footer" id="post-footer">
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
-                <span>Updated on 2024-01-02</span>
+                <span>Updated on 2024-02-24</span>
             </div></div>
         <div class="post-info-line">
             <div class="post-info-md"><span>
-                            <a class="link-to-markdown" href="/2023%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/index.md" target="_blank">Read Markdown</a>
+                            <a class="link-to-markdown" href="/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3/index.md" target="_blank">Read Markdown</a>
                         </span></div>
             <div class="post-info-share">
-                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://lance-e.github.io/2023%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/" data-title="2023年度总结" data-hashtags="杂事"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://lance-e.github.io/2023%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/" data-hashtag="杂事"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://lance-e.github.io/2023%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/" data-title="2023年度总结"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://lance-e.github.io/2023%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/" data-title="2023年度总结"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://lance-e.github.io/2023%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/" data-title="2023年度总结"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://lance-e.github.io/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3/" data-title="从0到1写docker之概念理解" data-hashtags="container"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://lance-e.github.io/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3/" data-hashtag="container"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://lance-e.github.io/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3/" data-title="从0到1写docker之概念理解"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://lance-e.github.io/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3/" data-title="从0到1写docker之概念理解"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://lance-e.github.io/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3/" data-title="从0到1写docker之概念理解"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
             </div>
         </div>
     </div>
 
     <div class="post-info-more">
-        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E6%9D%82%E4%BA%8B/">杂事</a></section>
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/container/">container</a></section>
         <section>
             <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
         </section>
     </div>
 
-    <div class="post-nav"><a href="/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E4%BA%8C/" class="prev" rel="prev" title="学习笔记：数据结构与算法(二)"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>学习笔记：数据结构与算法(二)</a>
-            <a href="/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3/" class="next" rel="next" title="从0到1写docker之概念理解">从0到1写docker之概念理解<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+    <div class="post-nav"><a href="/2023%E5%B9%B4%E5%BA%A6%E6%80%BB%E7%BB%93/" class="prev" rel="prev" title="2023年度总结"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>2023年度总结</a>
+            <a href="/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%BA%8C%E6%9E%84%E5%BB%BA%E7%AE%80%E6%98%93%E5%AE%B9%E5%99%A8/" class="next" rel="next" title="从0到1写docker之一构建简易容器">从0到1写docker之一构建简易容器<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
 </div>
 <div id="comments"><div id="valine" class="comment"></div><noscript>
                 Please enable JavaScript to view the comments powered by <a href="https://valine.js.org/">Valine</a>.
