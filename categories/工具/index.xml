@@ -4,7 +4,15 @@
         <link>https://lance-e.github.io/categories/%E5%B7%A5%E5%85%B7/</link>
         <description>工具 - Category - share knowledge</description>
         <generator>Hugo -- gohugo.io</generator><language>en</language><managingEditor>437653103@qq.com (lance)</managingEditor>
-            <webMaster>437653103@qq.com (lance)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><lastBuildDate>Fri, 01 Dec 2023 19:38:05 &#43;0800</lastBuildDate><atom:link href="https://lance-e.github.io/categories/%E5%B7%A5%E5%85%B7/" rel="self" type="application/rss+xml" /><item>
+            <webMaster>437653103@qq.com (lance)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><lastBuildDate>Tue, 26 Mar 2024 21:09:26 &#43;0800</lastBuildDate><atom:link href="https://lance-e.github.io/categories/%E5%B7%A5%E5%85%B7/" rel="self" type="application/rss+xml" /><item>
+    <title>Vim部分常用按键</title>
+    <link>https://lance-e.github.io/vim%E9%83%A8%E5%88%86%E5%B8%B8%E7%94%A8%E6%8C%89%E9%94%AE/</link>
+    <pubDate>Tue, 26 Mar 2024 21:09:26 &#43;0800</pubDate>
+    <author>lance</author>
+    <guid>https://lance-e.github.io/vim%E9%83%A8%E5%88%86%E5%B8%B8%E7%94%A8%E6%8C%89%E9%94%AE/</guid>
+    <description><![CDATA[对vim的部分较常用按键进行小总结]]></description>
+</item>
+<item>
     <title>viper:Go语言配置管理神器</title>
     <link>https://lance-e.github.io/viper/</link>
     <pubDate>Fri, 01 Dec 2023 19:38:05 &#43;0800</pubDate>
