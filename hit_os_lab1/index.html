@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Hit_os_lab1 - share knowledge</title><meta name="Description" content="哈工大操作系统lab1"><meta property="og:title" content="Hit_os_lab1" />
+<meta property="og:description" content="哈工大操作系统lab1" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://lance-e.github.io/hit_os_lab1/" /><meta property="og:image" content="https://lance-e.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-04-11T22:50:32+08:00" />
+<meta property="article:modified_time" content="2024-04-11T22:50:32+08:00" /><meta property="og:site_name" content="lance&#39;s blog" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://lance-e.github.io/logo.png"/>
+
+<meta name="twitter:title" content="Hit_os_lab1"/>
+<meta name="twitter:description" content="哈工大操作系统lab1"/>
+<meta name="application-name" content="lance&#39;s blog">
+<meta name="apple-mobile-web-app-title" content="lance&#39;s blog"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://lance-e.github.io/hit_os_lab1/" /><link rel="prev" href="https://lance-e.github.io/vim%E9%83%A8%E5%88%86%E5%B8%B8%E7%94%A8%E6%8C%89%E9%94%AE/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Hit_os_lab1",
+        "inLanguage": "en",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/lance-e.github.io\/hit_os_lab1\/"
+        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "lab","wordcount":  1020 ,
+        "url": "https:\/\/lance-e.github.io\/hit_os_lab1\/","datePublished": "2024-04-11T22:50:32+08:00","dateModified": "2024-04-11T22:50:32+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
+            "@type": "Organization",
+            "name": "lance","logo": "https:\/\/avatars.githubusercontent.com\/u\/139835134?s=400\u0026u=821ed61ec1049b862844e4b578ccbc46f274d65d\u0026v=4"},"author": {
+                "@type": "Person",
+                "name": "lance"
+            },"description": "哈工大操作系统lab1"
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="share knowledge"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw' aria-hidden='true'></i></span><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/categories/documentation/"> Docs </a><a class="menu-item" href="/about/"> About </a><a class="menu-item" href="https://github.com/dillonzq/LoveIt" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a><a href="javascript:void(0);" class="menu-item language" title="Select Language">
+                    <i class="fa fa-globe" aria-hidden="true"></i>                      
+                    <select class="language-select" id="language-select-desktop" onchange="location = this.value;"><option value="/hit_os_lab1/" selected>English</option></select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="share knowledge"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw' aria-hidden='true'></i></span><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/categories/documentation/" title="">Docs</a><a class="menu-item" href="/about/" title="">About</a><a class="menu-item" href="https://github.com/dillonzq/LoveIt" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a><a href="javascript:void(0);" class="menu-item" title="Select Language">
+                    <i class="fa fa-globe fa-fw" aria-hidden="true"></i>
+                    <select class="language-select" onchange="location = this.value;"><option value="/hit_os_lab1/" selected>English</option></select>
+                </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Hit_os_lab1</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>lance</a></span>&nbsp;<span class="post-category">included in <a href="/categories/os/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>os</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-04-11">2024-04-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1020 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;5 minutes&nbsp;<span id="/hit_os_lab1/" class="leancloud_visitors" data-flag-title="Hit_os_lab1">
+                        <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;views
+                    </span>&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1实验内容">1.实验内容</a></li>
+        <li><a href="#2实验开始">2.实验开始</a>
+          <ul>
+            <li>
+              <ul>
+                <li><a href="#1改写bootsects">1.改写bootsect.s</a></li>
+                <li><a href="#2改写setups">2.改写setup.s</a></li>
+                <li><a href="#5多此一举的操作">5.多此一举的操作</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h1 id="hit-os-lab1">hit os lab1</h1>
+<h3 id="1实验内容">1.实验内容</h3>
+<p>此次实验的基本内容是：</p>
+<ol>
+<li>阅读《Linux 内核完全注释》的第 6 章，对计算机和 Linux 0.11 的引导过程进行初步的了解；</li>
+<li>按照下面的要求改写 0.11 的引导程序 bootsect.s</li>
+<li>有兴趣同学可以做做进入保护模式前的设置程序 setup.s。</li>
+</ol>
+<p>改写 <code>bootsect.s</code> 主要完成如下功能：</p>
+<ol>
+<li>bootsect.s 能在屏幕上打印一段提示信息“XXX is booting&hellip;”，其中 XXX 是你给自己的操作系统起的名字，例如 LZJos、Sunix 等（可以上论坛上秀秀谁的 OS 名字最帅，也可以显示一个特色 logo，以表示自己操作系统的与众不同。）</li>
+</ol>
+<p>改写 <code>setup.s</code> 主要完成如下功能：</p>
+<ol>
+<li>bootsect.s 能完成 setup.s 的载入，并跳转到 setup.s 开始地址执行。而 setup.s 向屏幕输出一行&quot;Now we are in SETUP&quot;。</li>
+<li>setup.s 能获取至少一个基本的硬件参数（如内存参数、显卡参数、硬盘参数等），将其存放在内存的特定地址，并输出到屏幕上。</li>
+<li>setup.s 不再加载 Linux 内核，保持上述信息显示在屏幕上即可。</li>
+</ol>
+<p>在实验报告中回答如下问题：</p>
+<ol>
+<li>有时，继承传统意味着别手蹩脚。x86 计算机为了向下兼容，导致启动过程比较复杂。请找出 x86 计算机启动过程中，被硬件强制，软件必须遵守的两个“多此一举”的步骤（多找几个也无妨），说说它们为什么多此一举，并设计更简洁的替代方案。</li>
+</ol>
+<h3 id="2实验开始">2.实验开始</h3>
+<h5 id="1改写bootsects">1.改写bootsect.s</h5>
+<p>使用到int 0x10中断进行屏幕打印,出入参数：</p>
+<table>
+<thead>
+<tr>
+<th>寄存器</th>
+<th>参数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AL</td>
+<td>显示模式</td>
+</tr>
+<tr>
+<td>BH</td>
+<td>视频页</td>
+</tr>
+<tr>
+<td>BL</td>
+<td>属性值（如果AL=0x00或0x01</td>
+</tr>
+<tr>
+<td>CX</td>
+<td>字符串的长度</td>
+</tr>
+<tr>
+<td>DH,DL</td>
+<td>屏幕上显示起始位置的行、列值</td>
+</tr>
+<tr>
+<td>ES:BP</td>
+<td>字符串的段:偏移地址</td>
+</tr>
+</tbody>
+</table>
+<p>在屏幕上打印的源码：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">! Print some inane message
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">   mov	ah,#0x03		! read cursor pos
+</span></span><span class="line"><span class="cl">   xor	bh,bh
+</span></span><span class="line"><span class="cl">   int	0x10
+</span></span><span class="line"><span class="cl">   
+</span></span><span class="line"><span class="cl">   mov	cx,#24
+</span></span><span class="line"><span class="cl">   mov	bx,#0x0007		! page 0, attribute 7 (normal)
+</span></span><span class="line"><span class="cl">   mov	bp,#msg1
+</span></span><span class="line"><span class="cl">   mov	ax,#0x1301		! write string, move cursor
+</span></span><span class="line"><span class="cl">   int	0x10
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">msg1:
+</span></span><span class="line"><span class="cl">	.byte 13,10
+</span></span><span class="line"><span class="cl">	.ascii &#34;Loading system ...&#34;
+</span></span><span class="line"><span class="cl">	.byte 13,10,13,10
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">.org 508
+</span></span><span class="line"><span class="cl">root_dev:
+</span></span><span class="line"><span class="cl">	.word ROOT_DEV
+</span></span><span class="line"><span class="cl">boot_flag:
+</span></span><span class="line"><span class="cl">	.word 0xAA55
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>我们将源码修改并只保留<strong>核心</strong>部分</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">entry _start
+</span></span><span class="line"><span class="cl">_start:
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	mov	ah,#0x03		! read cursor pos
+</span></span><span class="line"><span class="cl">	xor	bh,bh
+</span></span><span class="line"><span class="cl">	int	0x10
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	mov	cx,#26
+</span></span><span class="line"><span class="cl">	mov	bx,#0x0007		! page 0, attribute 7 (normal)
+</span></span><span class="line"><span class="cl">	mov	bp,#msg1
+</span></span><span class="line"><span class="cl">	mov ax,#0x07c0
+</span></span><span class="line"><span class="cl">	mov es,ax					!
+</span></span><span class="line"><span class="cl">	mov	ax,#0x1301		! write string, move cursor
+</span></span><span class="line"><span class="cl">	int	0x10
+</span></span><span class="line"><span class="cl">my_loop:
+</span></span><span class="line"><span class="cl">	jmp	my_loop				! 死循环
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">msg1:
+</span></span><span class="line"><span class="cl">	.byte 13,10
+</span></span><span class="line"><span class="cl">	.ascii &#34;LanceOS starting !!!&#34;
+</span></span><span class="line"><span class="cl">	.byte 13,10,13,10
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">.org 510
+</span></span><span class="line"><span class="cl">boot_flag:
+</span></span><span class="line"><span class="cl">	.word 0xAA55
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>我们相对于源码进行修改的部分：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">	mov	cx,#26				!这里是因为我们修改了msg1中的ascii码数量，修改为了26
+</span></span><span class="line"><span class="cl">	mov ax,#0x07c0		！因为源码在这之前已经修改了es的值，所以我们去除无关代码后也要给es赋值，es是字符串的段地址
+</span></span><span class="line"><span class="cl">	mov es,ax					！
+</span></span><span class="line"><span class="cl">my_loop:
+</span></span><span class="line"><span class="cl">	jmp	my_loop				! 死循环
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">msg1:
+</span></span><span class="line"><span class="cl">	.byte 13,10
+</span></span><span class="line"><span class="cl">	.ascii &#34;LanceOS starting !!!&#34;			！修改为要修改的值
+</span></span><span class="line"><span class="cl">	.byte 13,10,13,10
+</span></span><span class="line"><span class="cl">.org 510						！这里是因为我们去除了无关的root_dev: .word ROOT_DEV,又要保证boot_flag:	.word 0xAA55在引导磁盘最后两个字节，所以508修改为510
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>打印成功</p>
+<h5 id="2改写setups">2.改写setup.s</h5>
+<p>由于我们是重新开始写的bootsect.s，所以我们需要在新的bootsect.s中添加启动setup的代码</p>
+<p>添加后的bootsect.s，成功加载setup</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="n">SETUPLEN</span> <span class="o">=</span> <span class="mi">4</span>				<span class="o">!</span> <span class="n">nr</span> <span class="n">of</span> <span class="n">setup</span><span class="o">-</span><span class="n">sectors</span>
+</span></span><span class="line"><span class="cl"><span class="n">SETUPSEG</span> <span class="o">=</span> <span class="mh">0x07e0</span>			<span class="o">!</span> <span class="err">因为我们在新的</span><span class="n">bootsect中并没有将代码移动到0x90000</span><span class="err">，所以依旧还是在</span><span class="mh">0x07c0</span><span class="p">,</span><span class="err">在</span><span class="mh">0x07c0</span><span class="err">基础上移动</span><span class="mi">521</span><span class="err">字节，所以改成</span><span class="mh">0x07e0</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">entry</span> <span class="n">_start</span>
+</span></span><span class="line"><span class="cl"><span class="n">_start</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ah</span><span class="p">,</span><span class="c1">#0x03		! read cursor pos</span>
+</span></span><span class="line"><span class="cl">	<span class="n">xor</span>	<span class="n">bh</span><span class="p">,</span><span class="n">bh</span>
+</span></span><span class="line"><span class="cl">	<span class="ne">int</span>	<span class="mh">0x10</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">cx</span><span class="p">,</span><span class="c1">#26</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">bx</span><span class="p">,</span><span class="c1">#0x0007		! page 0, attribute 7 (normal)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">bp</span><span class="p">,</span><span class="c1">#msg1</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span> <span class="n">ax</span><span class="p">,</span><span class="c1">#0x07c0</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span> <span class="n">es</span><span class="p">,</span><span class="n">ax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ax</span><span class="p">,</span><span class="c1">#0x1301		! write string, move cursor</span>
+</span></span><span class="line"><span class="cl">	<span class="ne">int</span>	<span class="mh">0x10</span>
+</span></span><span class="line"><span class="cl"><span class="n">load_setup</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="c1">#0x0000		! drive 0, head 0</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">cx</span><span class="p">,</span><span class="c1">#0x0002		! sector 2, track 0</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">bx</span><span class="p">,</span><span class="c1">#0x0200		! address = 512, in INITSEG</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ax</span><span class="p">,</span><span class="c1">#0x0200+SETUPLEN	! service 2, nr of sectors</span>
+</span></span><span class="line"><span class="cl">	<span class="ne">int</span>	<span class="mh">0x13</span>			<span class="o">!</span> <span class="n">read</span> <span class="n">it</span>
+</span></span><span class="line"><span class="cl">	<span class="n">jnc</span>	<span class="n">ok_load_setup</span>		<span class="o">!</span> <span class="n">ok</span> <span class="o">-</span> <span class="k">continue</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="c1">#0x0000</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ax</span><span class="p">,</span><span class="c1">#0x0000		! reset the diskette</span>
+</span></span><span class="line"><span class="cl">	<span class="ne">int</span>	<span class="mh">0x13</span>
+</span></span><span class="line"><span class="cl">	<span class="n">j</span>	<span class="n">load_setup</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">ok_load_setup</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">jmpi</span>	<span class="mi">0</span><span class="p">,</span><span class="n">SETUPSEG</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">msg1</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="o">.</span><span class="n">byte</span> <span class="mi">13</span><span class="p">,</span><span class="mi">10</span>
+</span></span><span class="line"><span class="cl">	<span class="o">.</span><span class="n">ascii</span> <span class="s2">&#34;LanceOS starting !!!&#34;</span>
+</span></span><span class="line"><span class="cl">	<span class="o">.</span><span class="n">byte</span> <span class="mi">13</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">10</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">org</span> <span class="mi">510</span>
+</span></span><span class="line"><span class="cl"><span class="n">boot_flag</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="o">.</span><span class="n">word</span> <span class="mh">0xAA55</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>新的setup.s，成功打印&quot;Now we are in SETUP&quot;</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">entry _start
+</span></span><span class="line"><span class="cl">_start:
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	mov	ah,#0x03		! read cursor pos
+</span></span><span class="line"><span class="cl">	xor	bh,bh
+</span></span><span class="line"><span class="cl">	int	0x10
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	mov	cx,#25
+</span></span><span class="line"><span class="cl">	mov	bx,#0x0007		! page 0, attribute 7 (normal)
+</span></span><span class="line"><span class="cl">	mov	bp,#msg2
+</span></span><span class="line"><span class="cl">	mov ax,cs
+</span></span><span class="line"><span class="cl">	mov es,ax
+</span></span><span class="line"><span class="cl">	mov	ax,#0x1301		! write string, move cursor
+</span></span><span class="line"><span class="cl">	int	0x10
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">my_loop:
+</span></span><span class="line"><span class="cl">	jmp	my_loop				! 死循环
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">msg2:
+</span></span><span class="line"><span class="cl">	.byte 13,10
+</span></span><span class="line"><span class="cl">	.ascii &#34;Now we are in SETUP&#34;
+</span></span><span class="line"><span class="cl">	.byte 13,10,13,10
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">.org 510
+</span></span><span class="line"><span class="cl">boot_flag:
+</span></span><span class="line"><span class="cl">	.word 0xAA55
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>获取硬件参数，并打印到屏幕，这部分代码比较复杂，直接看实验给出的答案吧：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span><span class="lnt">113
+</span><span class="lnt">114
+</span><span class="lnt">115
+</span><span class="lnt">116
+</span><span class="lnt">117
+</span><span class="lnt">118
+</span><span class="lnt">119
+</span><span class="lnt">120
+</span><span class="lnt">121
+</span><span class="lnt">122
+</span><span class="lnt">123
+</span><span class="lnt">124
+</span><span class="lnt">125
+</span><span class="lnt">126
+</span><span class="lnt">127
+</span><span class="lnt">128
+</span><span class="lnt">129
+</span><span class="lnt">130
+</span><span class="lnt">131
+</span><span class="lnt">132
+</span><span class="lnt">133
+</span><span class="lnt">134
+</span><span class="lnt">135
+</span><span class="lnt">136
+</span><span class="lnt">137
+</span><span class="lnt">138
+</span><span class="lnt">139
+</span><span class="lnt">140
+</span><span class="lnt">141
+</span><span class="lnt">142
+</span><span class="lnt">143
+</span><span class="lnt">144
+</span><span class="lnt">145
+</span><span class="lnt">146
+</span><span class="lnt">147
+</span><span class="lnt">148
+</span><span class="lnt">149
+</span><span class="lnt">150
+</span><span class="lnt">151
+</span><span class="lnt">152
+</span><span class="lnt">153
+</span><span class="lnt">154
+</span><span class="lnt">155
+</span><span class="lnt">156
+</span><span class="lnt">157
+</span><span class="lnt">158
+</span><span class="lnt">159
+</span><span class="lnt">160
+</span><span class="lnt">161
+</span><span class="lnt">162
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">INITSEG  = 0x9000
+</span></span><span class="line"><span class="cl">entry _start
+</span></span><span class="line"><span class="cl">_start:
+</span></span><span class="line"><span class="cl">! Print &#34;NOW we are in SETUP&#34;
+</span></span><span class="line"><span class="cl">    mov ah,#0x03
+</span></span><span class="line"><span class="cl">    xor bh,bh
+</span></span><span class="line"><span class="cl">    int 0x10
+</span></span><span class="line"><span class="cl">    mov cx,#25
+</span></span><span class="line"><span class="cl">    mov bx,#0x0007
+</span></span><span class="line"><span class="cl">    mov bp,#msg2
+</span></span><span class="line"><span class="cl">    mov ax,cs
+</span></span><span class="line"><span class="cl">    mov es,ax
+</span></span><span class="line"><span class="cl">    mov ax,#0x1301
+</span></span><span class="line"><span class="cl">    int 0x10
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    mov ax,cs
+</span></span><span class="line"><span class="cl">    mov es,ax
+</span></span><span class="line"><span class="cl">! init ss:sp
+</span></span><span class="line"><span class="cl">    mov ax,#INITSEG
+</span></span><span class="line"><span class="cl">    mov ss,ax
+</span></span><span class="line"><span class="cl">    mov sp,#0xFF00
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">! Get Params
+</span></span><span class="line"><span class="cl">    mov ax,#INITSEG
+</span></span><span class="line"><span class="cl">    mov ds,ax
+</span></span><span class="line"><span class="cl">    mov ah,#0x03
+</span></span><span class="line"><span class="cl">    xor bh,bh
+</span></span><span class="line"><span class="cl">    int 0x10
+</span></span><span class="line"><span class="cl">    mov [0],dx
+</span></span><span class="line"><span class="cl">    mov ah,#0x88
+</span></span><span class="line"><span class="cl">    int 0x15
+</span></span><span class="line"><span class="cl">    mov [2],ax
+</span></span><span class="line"><span class="cl">    mov ax,#0x0000
+</span></span><span class="line"><span class="cl">    mov ds,ax
+</span></span><span class="line"><span class="cl">    lds si,[4*0x41]
+</span></span><span class="line"><span class="cl">    mov ax,#INITSEG
+</span></span><span class="line"><span class="cl">    mov es,ax
+</span></span><span class="line"><span class="cl">    mov di,#0x0004
+</span></span><span class="line"><span class="cl">    mov cx,#0x10
+</span></span><span class="line"><span class="cl">    rep
+</span></span><span class="line"><span class="cl">    movsb
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">! Be Ready to Print
+</span></span><span class="line"><span class="cl">    mov ax,cs
+</span></span><span class="line"><span class="cl">    mov es,ax
+</span></span><span class="line"><span class="cl">    mov ax,#INITSEG
+</span></span><span class="line"><span class="cl">    mov ds,ax
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">! Cursor Position
+</span></span><span class="line"><span class="cl">    mov ah,#0x03
+</span></span><span class="line"><span class="cl">    xor bh,bh
+</span></span><span class="line"><span class="cl">    int 0x10
+</span></span><span class="line"><span class="cl">    mov cx,#18
+</span></span><span class="line"><span class="cl">    mov bx,#0x0007
+</span></span><span class="line"><span class="cl">    mov bp,#msg_cursor
+</span></span><span class="line"><span class="cl">    mov ax,#0x1301
+</span></span><span class="line"><span class="cl">    int 0x10
+</span></span><span class="line"><span class="cl">    mov dx,[0]
+</span></span><span class="line"><span class="cl">    call    print_hex
+</span></span><span class="line"><span class="cl">! Memory Size
+</span></span><span class="line"><span class="cl">    mov ah,#0x03
+</span></span><span class="line"><span class="cl">    xor bh,bh
+</span></span><span class="line"><span class="cl">    int 0x10
+</span></span><span class="line"><span class="cl">    mov cx,#14
+</span></span><span class="line"><span class="cl">    mov bx,#0x0007
+</span></span><span class="line"><span class="cl">    mov bp,#msg_memory
+</span></span><span class="line"><span class="cl">    mov ax,#0x1301
+</span></span><span class="line"><span class="cl">    int 0x10
+</span></span><span class="line"><span class="cl">    mov dx,[2]
+</span></span><span class="line"><span class="cl">    call    print_hex
+</span></span><span class="line"><span class="cl">! Add KB
+</span></span><span class="line"><span class="cl">    mov ah,#0x03
+</span></span><span class="line"><span class="cl">    xor bh,bh
+</span></span><span class="line"><span class="cl">    int 0x10
+</span></span><span class="line"><span class="cl">    mov cx,#2
+</span></span><span class="line"><span class="cl">    mov bx,#0x0007
+</span></span><span class="line"><span class="cl">    mov bp,#msg_kb
+</span></span><span class="line"><span class="cl">    mov ax,#0x1301
+</span></span><span class="line"><span class="cl">    int 0x10
+</span></span><span class="line"><span class="cl">! Cyles
+</span></span><span class="line"><span class="cl">    mov ah,#0x03
+</span></span><span class="line"><span class="cl">    xor bh,bh
+</span></span><span class="line"><span class="cl">    int 0x10
+</span></span><span class="line"><span class="cl">    mov cx,#7
+</span></span><span class="line"><span class="cl">    mov bx,#0x0007
+</span></span><span class="line"><span class="cl">    mov bp,#msg_cyles
+</span></span><span class="line"><span class="cl">    mov ax,#0x1301
+</span></span><span class="line"><span class="cl">    int 0x10
+</span></span><span class="line"><span class="cl">    mov dx,[4]
+</span></span><span class="line"><span class="cl">    call    print_hex
+</span></span><span class="line"><span class="cl">! Heads
+</span></span><span class="line"><span class="cl">    mov ah,#0x03
+</span></span><span class="line"><span class="cl">    xor bh,bh
+</span></span><span class="line"><span class="cl">    int 0x10
+</span></span><span class="line"><span class="cl">    mov cx,#8
+</span></span><span class="line"><span class="cl">    mov bx,#0x0007
+</span></span><span class="line"><span class="cl">    mov bp,#msg_heads
+</span></span><span class="line"><span class="cl">    mov ax,#0x1301
+</span></span><span class="line"><span class="cl">    int 0x10
+</span></span><span class="line"><span class="cl">    mov dx,[6]
+</span></span><span class="line"><span class="cl">    call    print_hex
+</span></span><span class="line"><span class="cl">! Secotrs
+</span></span><span class="line"><span class="cl">    mov ah,#0x03
+</span></span><span class="line"><span class="cl">    xor bh,bh
+</span></span><span class="line"><span class="cl">    int 0x10
+</span></span><span class="line"><span class="cl">    mov cx,#10
+</span></span><span class="line"><span class="cl">    mov bx,#0x0007
+</span></span><span class="line"><span class="cl">    mov bp,#msg_sectors
+</span></span><span class="line"><span class="cl">    mov ax,#0x1301
+</span></span><span class="line"><span class="cl">    int 0x10
+</span></span><span class="line"><span class="cl">    mov dx,[12]
+</span></span><span class="line"><span class="cl">    call    print_hex
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">inf_loop:
+</span></span><span class="line"><span class="cl">    jmp inf_loop
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">print_hex:
+</span></span><span class="line"><span class="cl">    mov    cx,#4
+</span></span><span class="line"><span class="cl">print_digit:
+</span></span><span class="line"><span class="cl">    rol    dx,#4
+</span></span><span class="line"><span class="cl">    mov    ax,#0xe0f
+</span></span><span class="line"><span class="cl">    and    al,dl
+</span></span><span class="line"><span class="cl">    add    al,#0x30
+</span></span><span class="line"><span class="cl">    cmp    al,#0x3a
+</span></span><span class="line"><span class="cl">    jl     outp
+</span></span><span class="line"><span class="cl">    add    al,#0x07
+</span></span><span class="line"><span class="cl">outp:
+</span></span><span class="line"><span class="cl">    int    0x10
+</span></span><span class="line"><span class="cl">    loop   print_digit
+</span></span><span class="line"><span class="cl">    ret
+</span></span><span class="line"><span class="cl">print_nl:
+</span></span><span class="line"><span class="cl">    mov    ax,#0xe0d     ! CR
+</span></span><span class="line"><span class="cl">    int    0x10
+</span></span><span class="line"><span class="cl">    mov    al,#0xa     ! LF
+</span></span><span class="line"><span class="cl">    int    0x10
+</span></span><span class="line"><span class="cl">    ret
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">msg2:
+</span></span><span class="line"><span class="cl">    .byte 13,10
+</span></span><span class="line"><span class="cl">    .ascii &#34;NOW we are in SETUP&#34;
+</span></span><span class="line"><span class="cl">    .byte 13,10,13,10
+</span></span><span class="line"><span class="cl">msg_cursor:
+</span></span><span class="line"><span class="cl">    .byte 13,10
+</span></span><span class="line"><span class="cl">    .ascii &#34;Cursor position:&#34;
+</span></span><span class="line"><span class="cl">msg_memory:
+</span></span><span class="line"><span class="cl">    .byte 13,10
+</span></span><span class="line"><span class="cl">    .ascii &#34;Memory Size:&#34;
+</span></span><span class="line"><span class="cl">msg_cyles:
+</span></span><span class="line"><span class="cl">    .byte 13,10
+</span></span><span class="line"><span class="cl">    .ascii &#34;Cyls:&#34;
+</span></span><span class="line"><span class="cl">msg_heads:
+</span></span><span class="line"><span class="cl">    .byte 13,10
+</span></span><span class="line"><span class="cl">    .ascii &#34;Heads:&#34;
+</span></span><span class="line"><span class="cl">msg_sectors:
+</span></span><span class="line"><span class="cl">    .byte 13,10
+</span></span><span class="line"><span class="cl">    .ascii &#34;Sectors:&#34;
+</span></span><span class="line"><span class="cl">msg_kb:
+</span></span><span class="line"><span class="cl">    .ascii &#34;KB&#34;
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">.org 510
+</span></span><span class="line"><span class="cl">boot_flag:
+</span></span><span class="line"><span class="cl">    .word 0xAA55
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="5多此一举的操作">5.多此一举的操作</h5>
+<ul>
+<li>bootsect代码先加载到0x7c00 ，然后又复制到0x90000处</li>
+<li>system 代码先加载到0x10000,然后又复制到内存的最开始0处</li>
+</ul></div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2024-04-11</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/hit_os_lab1/index.md" target="_blank">Read Markdown</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://lance-e.github.io/hit_os_lab1/" data-title="Hit_os_lab1" data-hashtags="lab"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://lance-e.github.io/hit_os_lab1/" data-hashtag="lab"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://lance-e.github.io/hit_os_lab1/" data-title="Hit_os_lab1"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://lance-e.github.io/hit_os_lab1/" data-title="Hit_os_lab1"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://lance-e.github.io/hit_os_lab1/" data-title="Hit_os_lab1"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/lab/">lab</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/vim%E9%83%A8%E5%88%86%E5%B8%B8%E7%94%A8%E6%8C%89%E9%94%AE/" class="prev" rel="prev" title="Vim部分常用按键"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Vim部分常用按键</a></div>
+</div>
+<div id="comments"><div id="valine" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://valine.js.org/">Valine</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.120.4">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2023 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">lance</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/valine/valine.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/valine@1.5.0/dist/Valine.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/algoliasearch@4.13.1/dist/algoliasearch-lite.umd.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typeit@8.6.0/dist/index.umd.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"valine":{"appId":"QGzwQXOqs5JOhN4RGPOkR2mR-MdYXbMMI","appKey":"WBmoGyJtbqUswvfLh6L8iEBr","avatar":"mp","el":"#valine","emojiCDN":"https://cdn.jsdelivr.net/npm/emoji-datasource-google@14.0.0/img/google/64/","emojiMaps":{"100":"1f4af.png","alien":"1f47d.png","anger":"1f4a2.png","angry":"1f620.png","anguished":"1f627.png","astonished":"1f632.png","black_heart":"1f5a4.png","blue_heart":"1f499.png","blush":"1f60a.png","bomb":"1f4a3.png","boom":"1f4a5.png","broken_heart":"1f494.png","brown_heart":"1f90e.png","clown_face":"1f921.png","cold_face":"1f976.png","cold_sweat":"1f630.png","confounded":"1f616.png","confused":"1f615.png","cry":"1f622.png","crying_cat_face":"1f63f.png","cupid":"1f498.png","dash":"1f4a8.png","disappointed":"1f61e.png","disappointed_relieved":"1f625.png","dizzy":"1f4ab.png","dizzy_face":"1f635.png","drooling_face":"1f924.png","exploding_head":"1f92f.png","expressionless":"1f611.png","face_vomiting":"1f92e.png","face_with_cowboy_hat":"1f920.png","face_with_hand_over_mouth":"1f92d.png","face_with_head_bandage":"1f915.png","face_with_monocle":"1f9d0.png","face_with_raised_eyebrow":"1f928.png","face_with_rolling_eyes":"1f644.png","face_with_symbols_on_mouth":"1f92c.png","face_with_thermometer":"1f912.png","fearful":"1f628.png","flushed":"1f633.png","frowning":"1f626.png","ghost":"1f47b.png","gift_heart":"1f49d.png","green_heart":"1f49a.png","grimacing":"1f62c.png","grin":"1f601.png","grinning":"1f600.png","hankey":"1f4a9.png","hear_no_evil":"1f649.png","heart":"2764-fe0f.png","heart_decoration":"1f49f.png","heart_eyes":"1f60d.png","heart_eyes_cat":"1f63b.png","heartbeat":"1f493.png","heartpulse":"1f497.png","heavy_heart_exclamation_mark_ornament":"2763-fe0f.png","hole":"1f573-fe0f.png","hot_face":"1f975.png","hugging_face":"1f917.png","hushed":"1f62f.png","imp":"1f47f.png","innocent":"1f607.png","japanese_goblin":"1f47a.png","japanese_ogre":"1f479.png","joy":"1f602.png","joy_cat":"1f639.png","kiss":"1f48b.png","kissing":"1f617.png","kissing_cat":"1f63d.png","kissing_closed_eyes":"1f61a.png","kissing_heart":"1f618.png","kissing_smiling_eyes":"1f619.png","laughing":"1f606.png","left_speech_bubble":"1f5e8-fe0f.png","love_letter":"1f48c.png","lying_face":"1f925.png","mask":"1f637.png","money_mouth_face":"1f911.png","nauseated_face":"1f922.png","nerd_face":"1f913.png","neutral_face":"1f610.png","no_mouth":"1f636.png","open_mouth":"1f62e.png","orange_heart":"1f9e1.png","partying_face":"1f973.png","pensive":"1f614.png","persevere":"1f623.png","pleading_face":"1f97a.png","pouting_cat":"1f63e.png","purple_heart":"1f49c.png","rage":"1f621.png","relaxed":"263a-fe0f.png","relieved":"1f60c.png","revolving_hearts":"1f49e.png","right_anger_bubble":"1f5ef-fe0f.png","robot_face":"1f916.png","rolling_on_the_floor_laughing":"1f923.png","scream":"1f631.png","scream_cat":"1f640.png","see_no_evil":"1f648.png","shushing_face":"1f92b.png","skull":"1f480.png","skull_and_crossbones":"2620-fe0f.png","sleeping":"1f634.png","sleepy":"1f62a.png","slightly_frowning_face":"1f641.png","slightly_smiling_face":"1f642.png","smile":"1f604.png","smile_cat":"1f638.png","smiley":"1f603.png","smiley_cat":"1f63a.png","smiling_face_with_3_hearts":"1f970.png","smiling_imp":"1f608.png","smirk":"1f60f.png","smirk_cat":"1f63c.png","sneezing_face":"1f927.png","sob":"1f62d.png","space_invader":"1f47e.png","sparkling_heart":"1f496.png","speak_no_evil":"1f64a.png","speech_balloon":"1f4ac.png","star-struck":"1f929.png","stuck_out_tongue":"1f61b.png","stuck_out_tongue_closed_eyes":"1f61d.png","stuck_out_tongue_winking_eye":"1f61c.png","sunglasses":"1f60e.png","sweat":"1f613.png","sweat_drops":"1f4a6.png","sweat_smile":"1f605.png","thinking_face":"1f914.png","thought_balloon":"1f4ad.png","tired_face":"1f62b.png","triumph":"1f624.png","two_hearts":"1f495.png","unamused":"1f612.png","upside_down_face":"1f643.png","weary":"1f629.png","white_frowning_face":"2639-fe0f.png","white_heart":"1f90d.png","wink":"1f609.png","woozy_face":"1f974.png","worried":"1f61f.png","yawning_face":"1f971.png","yellow_heart":"1f49b.png","yum":"1f60b.png","zany_face":"1f92a.png","zipper_mouth_face":"1f910.png","zzz":"1f4a4.png"},"enableQQ":false,"highlight":true,"lang":"en","pageSize":10,"placeholder":"Your comment ...","recordIP":true,"serverURLs":"https://leancloud.hugoloveit.com","visitor":true}},"data":{"id-1":"lance's blog","id-2":"lance's blog"},"search":{"algoliaAppID":"PASDMWALPK","algoliaIndex":"index.en","algoliaSearchKey":"b42948e51daaa93df92381c8e2ac0f93","highlightTag":"em","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"algolia"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
