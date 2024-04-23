@@ -30,7 +30,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/lance-e.github.io\/hit_os_lab4\/"
-        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "lab","wordcount":  796 ,
+        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "lab","wordcount":  864 ,
         "url": "https:\/\/lance-e.github.io\/hit_os_lab4\/","datePublished": "2024-04-23T23:28:17+08:00","dateModified": "2024-04-23T23:28:17+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
             "@type": "Organization",
             "name": "lance","logo": "https:\/\/avatars.githubusercontent.com\/u\/139835134?s=400\u0026u=821ed61ec1049b862844e4b578ccbc46f274d65d\u0026v=4"},"author": {
@@ -110,8 +110,8 @@
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Hit_os_lab4</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>lance</a></span>&nbsp;<span class="post-category">included in <a href="/categories/os/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>os</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-04-23">2024-04-23</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;796 words&nbsp;
-                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;4 minutes&nbsp;<span id="/hit_os_lab4/" class="leancloud_visitors" data-flag-title="Hit_os_lab4">
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-04-23">2024-04-23</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;864 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;5 minutes&nbsp;<span id="/hit_os_lab4/" class="leancloud_visitors" data-flag-title="Hit_os_lab4">
                         <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;views
                     </span>&nbsp;</div>
         </div><div class="details toc" id="toc-static"  data-kept="">
@@ -370,10 +370,7 @@
 </ul>
 </li>
 </ul>
-<p>这里引用实验手册原话：</p>
-<p>​	关于 PC 的切换，和前面论述的一致，依靠的就是 <code>switch_to</code> 的最后一句指令 ret，虽然简单，但背后发生的事却很多：<code>schedule()</code> 函数的最后调用了这个 <code>switch_to</code> 函数，所以这句指令 ret 就返回到下一个进程（目标进程）的 <code>schedule()</code> 函数的末尾，遇到的是}，继续 ret 回到调用的 <code>schedule()</code> 地方，是在中断处理中调用的，所以回到了中断处理中，就到了中断返回的地址，再调用 iret 就到了目标进程的用户态程序去执行，和书中论述的内核态线程切换的五段论是完全一致的。</p>
-<p>​	first_return_from_kernel要完成什么工作？PCB 切换完成、内核栈切换完成、LDT 切换完成，接下来应该那个“内核级线程切换五段论”中的最后一段切换了，即完成用户栈和用户代码的切换，依靠的核心指令就是 iret，当然在切换之前应该回复一下执行现场，主要就是eax,ebx,ecx,edx,esi,edi,gs,fs,es,ds等寄存器的恢复</p>
-<p>然后是修改sched.h:</p>
+<p>syscall.s中修改：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt"> 1
@@ -398,31 +395,105 @@
 </span><span class="lnt">20
 </span><span class="lnt">21
 </span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
 </span></code></pre></td>
 <td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">task_struct</span> <span class="p">{</span>
-</span></span><span class="line"><span class="cl"><span class="cm">/* these are hardcoded - don&#39;t touch */</span>
-</span></span><span class="line"><span class="cl">	<span class="kt">long</span> <span class="n">state</span><span class="p">;</span>	<span class="cm">/* -1 unrunnable, 0 runnable, &gt;0 stopped */</span>
-</span></span><span class="line"><span class="cl">	<span class="kt">long</span> <span class="n">counter</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">	<span class="kt">long</span> <span class="n">priority</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">  <span class="kt">long</span> <span class="n">kernelstack</span>					<span class="c1">//在这里新增，所以signal，sigactioin,blocked在刚刚的syscall.s中也要修改
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">long</span> <span class="n">signal</span><span class="p">;</span>
-</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">sigaction</span> <span class="n">sigaction</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>
-</span></span><span class="line"><span class="cl">	<span class="kt">long</span> <span class="n">blocked</span><span class="p">;</span>	<span class="cm">/* bitmap of masked signals */</span>
-</span></span><span class="line"><span class="cl"><span class="cm">/* various fields */</span>
-</span></span><span class="line"><span class="cl">	
-</span></span><span class="line"><span class="cl"><span class="p">};</span>
+<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="n">esp0</span> <span class="o">=</span> <span class="mi">4</span> 				<span class="err">！是因为</span><span class="n">TSS内核栈指针esp0偏移为4</span>
+</span></span><span class="line"><span class="cl"><span class="n">kernel_stack</span> <span class="o">=</span> <span class="mi">12</span>
+</span></span><span class="line"><span class="cl"><span class="k">signal</span> <span class="o">=</span> <span class="mi">16</span>				<span class="err">！这些也要修改偏移量</span>
+</span></span><span class="line"><span class="cl"><span class="n">sigaction</span> <span class="o">=</span> <span class="mi">20</span>
+</span></span><span class="line"><span class="cl"><span class="n">blocked</span> <span class="o">=</span> <span class="p">(</span><span class="mi">37</span><span class="o">*</span><span class="mi">16</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="p">...</span>
-</span></span><span class="line"><span class="cl"><span class="cp">#define INIT_TASK \
-</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="cm">/* state etc */</span><span class="cp">	{ 0,15,15,PAGE_SIZE+(long)&amp;init_task, \					</span><span class="c1">//为新增的kernelstack初始化
-</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cm">/* signals */</span>	<span class="mi">0</span><span class="p">,{{},},</span><span class="mi">0</span><span class="p">,</span> \
-</span></span><span class="line"><span class="cl">  <span class="p">...</span>
-</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">globl</span> <span class="n">system_call</span><span class="p">,</span><span class="n">sys_fork</span><span class="p">,</span><span class="n">timer_interrupt</span><span class="p">,</span><span class="n">sys_execve</span>
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">globl</span> <span class="n">hd_interrupt</span><span class="p">,</span><span class="n">floppy_interrupt</span><span class="p">,</span><span class="n">parallel_interrupt</span>
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">globl</span> <span class="n">device_not_available</span><span class="p">,</span> <span class="n">coprocessor_error</span>
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">globl</span> <span class="n">switch_to</span><span class="p">,</span><span class="n">first_return_from_kernel</span>
+</span></span><span class="line"><span class="cl"><span class="o">...</span>
+</span></span><span class="line"><span class="cl"><span class="n">switch_to</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pushl</span> <span class="o">%</span><span class="n">ebp</span>
+</span></span><span class="line"><span class="cl">    <span class="n">movl</span> <span class="o">%</span><span class="n">esp</span><span class="p">,</span><span class="o">%</span><span class="n">ebp</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pushl</span> <span class="o">%</span><span class="n">ecx</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pushl</span> <span class="o">%</span><span class="n">ebx</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pushl</span> <span class="o">%</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">    <span class="n">movl</span> <span class="mi">8</span><span class="p">(</span><span class="o">%</span><span class="n">ebp</span><span class="p">),</span><span class="o">%</span><span class="n">ebx</span>				<span class="o">!</span><span class="err">取出下一个进程</span><span class="n">PCB的参数</span><span class="p">,</span><span class="err">指的是传入的</span><span class="n">pnext参数</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cmpl</span> <span class="o">%</span><span class="n">ebx</span><span class="p">,</span><span class="n">current</span>				<span class="o">!</span><span class="err">与</span><span class="n">current当前进程做比较</span>
+</span></span><span class="line"><span class="cl">    <span class="n">je</span> <span class="mi">1</span><span class="n">f</span>
+</span></span><span class="line"><span class="cl"><span class="o">!</span> <span class="err">切换</span><span class="n">PCB</span>
+</span></span><span class="line"><span class="cl">		<span class="n">movl</span> <span class="o">%</span><span class="n">ebx</span><span class="p">,</span><span class="o">%</span><span class="n">eax</span>			<span class="o">!</span><span class="n">ebx是从参数中传入的目标进程的PCB指针</span>
+</span></span><span class="line"><span class="cl">		<span class="n">xchgl</span> <span class="o">%</span><span class="n">eax</span><span class="p">,</span><span class="n">current</span>
+</span></span><span class="line"><span class="cl"><span class="o">!</span> <span class="n">TSS中的内核栈指针的重写</span>
+</span></span><span class="line"><span class="cl">	<span class="n">movl</span> <span class="n">tss</span><span class="p">,</span><span class="o">%</span><span class="n">ecx</span>
+</span></span><span class="line"><span class="cl">	<span class="n">addl</span> <span class="o">$</span><span class="mi">4096</span><span class="p">,</span><span class="o">%</span><span class="n">ebx</span>
+</span></span><span class="line"><span class="cl">	<span class="n">movl</span> <span class="o">%</span><span class="n">ebx</span><span class="p">,</span><span class="n">ESP0</span><span class="p">(</span><span class="o">%</span><span class="n">ecx</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="o">!</span> <span class="err">切换内核栈</span>
+</span></span><span class="line"><span class="cl">	<span class="n">movl</span> <span class="o">%</span><span class="n">esp</span><span class="p">,</span><span class="n">KERNEL_STACK</span><span class="p">(</span><span class="o">%</span><span class="n">eax</span><span class="p">)</span>    <span class="o">!</span> <span class="err">再取一下</span> <span class="n">ebx</span><span class="err">，因为前面修改过</span> <span class="n">ebx</span> <span class="err">的值</span>
+</span></span><span class="line"><span class="cl">	<span class="n">movl</span> <span class="mi">8</span><span class="p">(</span><span class="o">%</span><span class="n">ebp</span><span class="p">),</span><span class="o">%</span><span class="n">ebx</span>
+</span></span><span class="line"><span class="cl">	<span class="n">movl</span> <span class="n">KERNEL_STACK</span><span class="p">(</span><span class="o">%</span><span class="n">ebx</span><span class="p">),</span><span class="o">%</span><span class="n">esp</span>
+</span></span><span class="line"><span class="cl"><span class="o">!</span> <span class="err">切换</span><span class="n">LDT</span>
+</span></span><span class="line"><span class="cl">    <span class="n">movl</span> <span class="mi">12</span><span class="p">(</span><span class="o">%</span><span class="n">ebp</span><span class="p">),</span><span class="o">%</span><span class="n">ecx</span>			<span class="err">！取出</span><span class="n">LDT</span><span class="p">(</span><span class="n">next</span><span class="p">)</span><span class="err">对应参数</span>
+</span></span><span class="line"><span class="cl">    <span class="n">lldt</span> <span class="o">%</span><span class="n">cx</span>								<span class="err">！负责修改</span><span class="n">LDTR寄存器</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="n">movl</span> <span class="o">$</span><span class="mh">0x17</span><span class="p">,</span><span class="o">%</span><span class="n">ecx</span>					<span class="o">!</span><span class="err">这两句是重新取段寄存器</span><span class="n">fs值</span><span class="err">，非常重要</span>
+</span></span><span class="line"><span class="cl">    <span class="n">mov</span> <span class="o">%</span><span class="n">cx</span><span class="p">,</span><span class="o">%</span><span class="n">fs</span>
+</span></span><span class="line"><span class="cl"><span class="o">!</span> <span class="err">和后面的</span> <span class="n">clts</span> <span class="err">配合来处理协处理器，由于和主题关系不大，此处不做论述</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cmpl</span> <span class="o">%</span><span class="n">eax</span><span class="p">,</span><span class="n">last_task_used_math</span>
+</span></span><span class="line"><span class="cl">    <span class="n">jne</span> <span class="mi">1</span><span class="n">f</span>
+</span></span><span class="line"><span class="cl">    <span class="n">clts</span>
 </span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="p">...</span>
-</span></span><span class="line"><span class="cl"><span class="c1">//删除掉原来的switch_to
-</span></span></span></code></pre></td></tr></table>
+</span></span><span class="line"><span class="cl"><span class="mi">1</span><span class="p">:</span>  <span class="n">popl</span> <span class="o">%</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">    <span class="n">popl</span> <span class="o">%</span><span class="n">ebx</span>
+</span></span><span class="line"><span class="cl">    <span class="n">popl</span> <span class="o">%</span><span class="n">ecx</span>
+</span></span><span class="line"><span class="cl">    <span class="n">popl</span> <span class="o">%</span><span class="n">ebp</span>
+</span></span><span class="line"><span class="cl"><span class="n">ret</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">first_return_from_kernel</span><span class="p">:</span>	
+</span></span><span class="line"><span class="cl">		<span class="n">popl</span> <span class="o">%</span><span class="n">edx</span>
+</span></span><span class="line"><span class="cl">		<span class="n">popl</span> <span class="o">%</span><span class="n">edi</span>
+</span></span><span class="line"><span class="cl">		<span class="n">popl</span> <span class="o">%</span><span class="n">esi</span>
+</span></span><span class="line"><span class="cl">		<span class="n">pop</span> <span class="o">%</span><span class="n">gs</span>
+</span></span><span class="line"><span class="cl">		<span class="n">pop</span> <span class="o">%</span><span class="n">fs</span>
+</span></span><span class="line"><span class="cl">	  <span class="n">pop</span> <span class="o">%</span><span class="n">es</span>
+</span></span><span class="line"><span class="cl">		<span class="n">pop</span> <span class="o">%</span><span class="n">ds</span>
+</span></span><span class="line"><span class="cl">		<span class="n">iret</span>
+</span></span></code></pre></td></tr></table>
 </div>
 </div><h5 id="2修改fork相关">2.修改fork相关</h5>
 <p>就是将进程的用户栈，内核栈，用户程序通过压入内核栈中的ss:esp,cs:eip相关联</p>
