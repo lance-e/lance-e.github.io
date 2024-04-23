@@ -67,176 +67,91 @@ __asm__("cmpl %%ecx,current\n\t" \
 
 ### 3.实验开始
 
-##### 1.修改switch_to相关
+##### 2.修改fork相关
 
-​	因为切换进程不再需要TSS进行切换了，而是采用内核栈切换的方式来进行切换，所以在新的switch_to需要当前进程的PCB，目标进程的PCB，当前进程的内核栈，目标进程的内核栈等信息。 内核栈信息与PCB位于同一页内存中，所以当知道PCB就可以获得内核栈信息，而当前进程的PCB位于全局变量current中，所以仅需要传递给switch_to目标进程的PCB指针。虽然不需要TSS(next)了，但是还需要_LDT(next)，所以还要传递一个_LDT(next)，每个进程都会有一个LDT，LDT是一个映射表，防止符号地址错乱。
-
-对sched.c作出修改：
+就是将进程的用户栈，内核栈，用户程序通过压入内核栈中的ss:esp,cs:eip相关联
 
 ~~~c
-void schedule(void)
+int copy_process(int nr,long ebp,long edi,long esi,long gs,long none,
+		long ebx,long ecx,long edx,
+		long fs,long es,long ds,
+		long eip,long cs,long eflags,long esp,long ss)
 {
-	int i,next,c;
-	struct task_struct ** p;
-	...
+	struct task_struct *p;
+	int i;
+	struct file *f;
 
-	while (1) {
-		...
-		while (--i) {
-			if (!*--p)
-				continue;
-			if ((*p)->state == TASK_RUNNING && (*p)->counter > c)
-				c = (*p)->counter, next = i;
-		}
-		...
+	p = (struct task_struct *) get_free_page();
+	if (!p)
+		return -EAGAIN;
+	task[nr] = p;
+	*p = *current;	/* NOTE! this doesn't copy the supervisor stack */
+	p->state = TASK_UNINTERRUPTIBLE;
+	p->pid = last_pid;
+	p->father = current->pid;
+	p->counter = p->priority;
+	p->signal = 0;
+	p->alarm = 0;
+	p->leader = 0;		/* process leadership doesn't inherit */
+	p->utime = p->stime = 0;
+	p->cutime = p->cstime = 0;
+	p->start_time = jiffies;
+	//tss相关部分全部删除
+  
+  krnstack = (long *) (PAGE_SIZE + (long) p);
+  *(--krnstack) = ss & 0xffff;
+	*(--krnstack) = esp;
+	*(--krnstack) = eflags;
+	*(--krnstack) = cs & 0xffff;
+	*(--krnstack) = eip;
+  
+  *(--krnstack) = ds & 0xffff;
+ 	*(--krnstack) = es & 0xffff;
+ 	*(--krnstack) = fs & 0xffff;
+ 	*(--krnstack) = gs & 0xffff;
+ 	*(--krnstack) = esi;
+ 	*(--krnstack) = edi;
+ 	*(--krnstack) = edx;
+	*(--krnstack) = (long) first_return_from_kernel;
+ 	//初始化地址，switch_to的ret就会跳转到first_return_form_kernel的地方
+ 
+
+  //为了完成switch_to最后的弹栈
+  *(--krnstack) = ebp;
+	*(--krnstack) = ecx;
+	*(--krnstack) = ebx;
+	// 这里的 0 最有意思。
+	*(--krnstack) = 0;
+  
+  p->kernelstack = stack;
+  
+	if (last_task_used_math == current)
+		__asm__("clts ; fnsave %0"::"m" (p->tss.i387));
+	if (copy_mem(nr,p)) {
+		task[nr] = NULL;
+		free_page((long) p);
+		return -EAGAIN;
 	}
-	switch_to(next);
+	for (i=0; i<NR_OPEN;i++)
+		if ((f=p->filp[i]))
+			f->f_count++;
+	if (current->pwd)
+		current->pwd->i_count++;
+	if (current->root)
+		current->root->i_count++;
+	if (current->executable)
+		current->executable->i_count++;
+	set_tss_desc(gdt+(nr<<1)+FIRST_TSS_ENTRY,&(p->tss));
+	set_ldt_desc(gdt+(nr<<1)+FIRST_LDT_ENTRY,&(p->ldt));
+	p->state = TASK_RUNNING;	/* do this last, just in case */
+	return last_pid;
 }
 ~~~
 
-改为
+fork会调用first_return_form_kernel,所以还需要添加：
 
 ~~~c
-sturct tss_struct * tss = &(init_task.task.tss)
-//0 号进程的 tss，所有进程都共用这个 tss，任务切换时不再发生变化。
-  ...
-extern void switch_to(struct task_struct*,int );
-void schedule(void)
-{
-	int i,next,c;
-	struct task_struct ** p;
-	struct task_struct * pnext = &(init_task.task); //表示下一个进程的相关信息
-
-	while (1) {
-		c = -1;
-		next = 0;
-		while (--i) {
-			if (!*--p)
-				continue;
-			if ((*p)->state == TASK_RUNNING && (*p)->counter > c)
-				c = (*p)->counter, next = i,pnext=*p;
-		}
-		
-	}
-	switch_to(pnext,_LDT(next));
-}
-~~~
-
-
-
-switch_to依次主要完成如下功能：
-
-- 先处理栈帧，即处理`ebp`寄存器
-
-- 取出下一个进程参数，并和`current`比较，相等就什么也不做，不等就开始进程切换
-
-- 进程开始切换：
-
-  - `PCB`切换
-
-  - `TSS`内核栈指针重写
-
-  - 内核栈切换
-
-  - LDT切换
-
-  - PC指针(CS:EIP)切换
-
-syscall.s中修改：
-
-~~~assembly
-...
-esp0 = 4 				！是因为TSS内核栈指针esp0偏移为4
-kernel_stack = 12
-signal = 16				！这些也要修改偏移量
-sigaction = 20
-blocked = (37*16)
-...
-
-.globl system_call,sys_fork,timer_interrupt,sys_execve
-.globl hd_interrupt,floppy_interrupt,parallel_interrupt
-.globl device_not_available, coprocessor_error
-.globl switch_to,first_return_from_kernel
-...
-switch_to:
-    pushl %ebp
-    movl %esp,%ebp
-    pushl %ecx
-    pushl %ebx
-    pushl %eax
-    movl 8(%ebp),%ebx				!取出下一个进程PCB的参数,指的是传入的pnext参数
-    cmpl %ebx,current				!与current当前进程做比较
-    je 1f
-! 切换PCB
-		movl %ebx,%eax			!ebx是从参数中传入的目标进程的PCB指针
-		xchgl %eax,current
-! TSS中的内核栈指针的重写
-	movl tss,%ecx
-	addl $4096,%ebx
-	movl %ebx,ESP0(%ecx)
-! 切换内核栈
-	movl %esp,KERNEL_STACK(%eax)    ! 再取一下 ebx，因为前面修改过 ebx 的值
-	movl 8(%ebp),%ebx
-	movl KERNEL_STACK(%ebx),%esp
-! 切换LDT
-    movl 12(%ebp),%ecx			！取出LDT(next)对应参数
-    lldt %cx								！负责修改LDTR寄存器
-    
-    movl $0x17,%ecx					!这两句是重新取段寄存器fs值，非常重要
-    mov %cx,%fs
-! 和后面的 clts 配合来处理协处理器，由于和主题关系不大，此处不做论述
-    cmpl %eax,last_task_used_math
-    jne 1f
-    clts
-
-1:  popl %eax
-    popl %ebx
-    popl %ecx
-    popl %ebp
-ret
-
-first_return_from_kernel:	
-		popl %edx
-		popl %edi
-		popl %esi
-		pop %gs
-		pop %fs
-	  pop %es
-		pop %ds
-		iret
-~~~
-
-这里引用实验手册原话：
-
-​	关于 PC 的切换，和前面论述的一致，依靠的就是 `switch_to` 的最后一句指令 ret，虽然简单，但背后发生的事却很多：`schedule()` 函数的最后调用了这个 `switch_to` 函数，所以这句指令 ret 就返回到下一个进程（目标进程）的 `schedule()` 函数的末尾，遇到的是}，继续 ret 回到调用的 `schedule()` 地方，是在中断处理中调用的，所以回到了中断处理中，就到了中断返回的地址，再调用 iret 就到了目标进程的用户态程序去执行，和书中论述的内核态线程切换的五段论是完全一致的。
-
-​	`first_return_from_kernel` 要完成什么工作？PCB 切换完成、内核栈切换完成、LDT 切换完成，接下来应该那个“内核级线程切换五段论”中的最后一段切换了，即完成用户栈和用户代码的切换，依靠的核心指令就是 iret，当然在切换之前应该回复一下执行现场，主要就是 `eax,ebx,ecx,edx,esi,edi,gs,fs,es,ds` 等寄存器的恢复.
-
-然后是修改sched.h:
-
-~~~c
-struct task_struct {
-/* these are hardcoded - don't touch */
-	long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
-	long counter;
-	long priority;
-  long kernelstack					//在这里新增，所以signal，sigactioin,blocked在刚刚的syscall.s中也要修改
-	long signal;
-	struct sigaction sigaction[32];
-	long blocked;	/* bitmap of masked signals */
-/* various fields */
-	
-};
-
-...
-#define INIT_TASK \
-/* state etc */	{ 0,15,15,PAGE_SIZE+(long)&init_task, \					//为新增的kernelstack初始化
-/* signals */	0,{{},},0, \
-  ...
-}
-
-...
-//删除掉原来的switch_to
+extern void first_return_from_kernel(void);
 ~~~
 
 ### 4.回答问题
