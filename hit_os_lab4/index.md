@@ -239,91 +239,59 @@ struct task_struct {
 //删除掉原来的switch_to
 ~~~
 
-##### 2.修改fork相关
+### 4.回答问题
 
-就是将进程的用户栈，内核栈，用户程序通过压入内核栈中的ss:esp,cs:eip相关联
+回答下面三个题：
 
-~~~c
-int copy_process(int nr,long ebp,long edi,long esi,long gs,long none,
-		long ebx,long ecx,long edx,
-		long fs,long es,long ds,
-		long eip,long cs,long eflags,long esp,long ss)
-{
-	struct task_struct *p;
-	int i;
-	struct file *f;
+#### 问题 1
 
-	p = (struct task_struct *) get_free_page();
-	if (!p)
-		return -EAGAIN;
-	task[nr] = p;
-	*p = *current;	/* NOTE! this doesn't copy the supervisor stack */
-	p->state = TASK_UNINTERRUPTIBLE;
-	p->pid = last_pid;
-	p->father = current->pid;
-	p->counter = p->priority;
-	p->signal = 0;
-	p->alarm = 0;
-	p->leader = 0;		/* process leadership doesn't inherit */
-	p->utime = p->stime = 0;
-	p->cutime = p->cstime = 0;
-	p->start_time = jiffies;
-	//tss相关部分全部删除
-  
-  krnstack = (long *) (PAGE_SIZE + (long) p);
-  *(--krnstack) = ss & 0xffff;
-	*(--krnstack) = esp;
-	*(--krnstack) = eflags;
-	*(--krnstack) = cs & 0xffff;
-	*(--krnstack) = eip;
-  
-  *(--krnstack) = ds & 0xffff;
- 	*(--krnstack) = es & 0xffff;
- 	*(--krnstack) = fs & 0xffff;
- 	*(--krnstack) = gs & 0xffff;
- 	*(--krnstack) = esi;
- 	*(--krnstack) = edi;
- 	*(--krnstack) = edx;
-	*(--krnstack) = (long) first_return_from_kernel;
- 	//初始化地址，switch_to的ret就会跳转到first_return_form_kernel的地方
- 
+针对下面的代码片段：
 
-  //为了完成switch_to最后的弹栈
-  *(--krnstack) = ebp;
-	*(--krnstack) = ecx;
-	*(--krnstack) = ebx;
-	// 这里的 0 最有意思。
-	*(--krnstack) = 0;
-  
-  p->kernelstack = stack;
-  
-	if (last_task_used_math == current)
-		__asm__("clts ; fnsave %0"::"m" (p->tss.i387));
-	if (copy_mem(nr,p)) {
-		task[nr] = NULL;
-		free_page((long) p);
-		return -EAGAIN;
-	}
-	for (i=0; i<NR_OPEN;i++)
-		if ((f=p->filp[i]))
-			f->f_count++;
-	if (current->pwd)
-		current->pwd->i_count++;
-	if (current->root)
-		current->root->i_count++;
-	if (current->executable)
-		current->executable->i_count++;
-	set_tss_desc(gdt+(nr<<1)+FIRST_TSS_ENTRY,&(p->tss));
-	set_ldt_desc(gdt+(nr<<1)+FIRST_LDT_ENTRY,&(p->ldt));
-	p->state = TASK_RUNNING;	/* do this last, just in case */
-	return last_pid;
-}
-~~~
+```
+movl tss,%ecx
+addl $4096,%ebx
+movl %ebx,ESP0(%ecx)
+```
 
-fork会调用first_return_form_kernel,所以还需要添加：
+回答问题：
 
-~~~c
-extern void first_return_from_kernel(void);
-~~~
+- （1）为什么要加 4096；
+  - 参考答案：因为ebx为下一个进程的task_struct指针，内核栈栈顶需要设置为与该进程task_struct相同物理页页顶，一页为4k(4096);
+
+- （2）为什么没有设置 tss 中的 ss0。
+  - 参考答案：所有进程的SS0都是0x10，切换前后不改变，所以不需要设置
+
+
+#### 问题 2
+
+针对代码片段：
+
+```c
+*(--krnstack) = ebp;
+*(--krnstack) = ecx;
+*(--krnstack) = ebx;
+*(--krnstack) = 0;
+```
+
+回答问题：
+
+- （1）子进程第一次执行时，eax=？为什么要等于这个数？哪里的工作让 eax 等于这样一个数？
+  - 答：eax=0，为了区分子进程和父进程的区别，注意修改后的fork.c中`*(--krnstack) = 0;`，这里将eax赋值为0。
+- （2）这段代码中的 ebx 和 ecx 来自哪里，是什么含义，为什么要通过这些代码将其写到子进程的内核栈中？
+  - 答：来自父进程在调用fork系统调用时传递进来的参数，即是通过system_call压入了内核栈，为了使子进程完全拷贝父进程的信息。通过在fork函数中写入到子进程的内核栈中，顺序不能发生变化，因为在进程切换时，由switch_to等函数弹出内核栈，必须与pop的顺序严格对应。
+- （3）这段代码中的 ebp 来自哪里，是什么含义，为什么要做这样的设置？可以不设置吗？为什么？
+  - 答：来自于父进程调用fork系统调用传递进来的参数，是父进程fork函数栈帧的基指针。因为在switch_to中设置了ebp的pop，所以必须设置，如果switch_to不pop，就可以不设置。
+
+#### 问题 3
+
+为什么要在切换完 LDT 之后要重新设置 fs=0x17？而且为什么重设操作要出现在切换完 LDT 之后，出现在 LDT 之前又会怎么样？
+
+难懂，跳过，
+
+### 5.总结
+
+参考博客：[哈工大操作系统实验四——基于内核栈切换的进程切换（极其详细）](https://blog.csdn.net/lyj1597374034/article/details/111033682?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522162246292016780255217157%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fall.%2522%257D&request_id=162246292016780255217157&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~first_rank_v2~rank_v29-6-111033682.first_rank_v2_pc_rank_v29&utm_term=%E5%9F%BA%E4%BA%8E%E5%86%85%E6%A0%B8%E6%A0%88%E7%9A%84%E8%BF%9B%E7%A8%8B%E5%88%87%E6%8D%A2&spm=1018.2226.3001.4187)
+
+这个lab是我目前来说做过最难的一个lab，基本上都是参考其他优秀博客，很多晦涩难懂的概念以及过程。对于基于内核栈切换线程的基本流程了解了个大概，应该会在之后写小内核会再深入理解一下。
 
 
