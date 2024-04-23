@@ -208,9 +208,11 @@ first_return_from_kernel:
 
 这里引用实验手册原话：
 
-​	
+​	关于 PC 的切换，和前面论述的一致，依靠的就是 `switch_to` 的最后一句指令 ret，虽然简单，但背后发生的事却很多：`schedule()` 函数的最后调用了这个 `switch_to` 函数，所以这句指令 ret 就返回到下一个进程（目标进程）的 `schedule()` 函数的末尾，遇到的是"}"，继续 ret 回到调用的 `schedule()` 地方，是在中断处理中调用的，所以回到了中断处理中，就到了中断返回的地址，再调用 iret 就到了目标进程的用户态程序去执行，和书中论述的内核态线程切换的五段论是完全一致的。
 
-然后是修改sched.h:
+​	first_return_from_kernel要完成什么工作？PCB 切换完成、内核栈切换完成、LDT 切换完成，接下来应该那个“内核级线程切换五段论”中的最后一段切换了，即完成用户栈和用户代码的切换，依靠的核心指令就是 iret，当然在切换之前应该回复一下执行现场，主要就是相关寄存器的恢复
+
+然后是修改sched.h，记得删除原来的switch_to:
 
 ~~~c
 struct task_struct {
@@ -225,12 +227,6 @@ struct task_struct {
 /* various fields */
 	
 };
-
-...
-/*#define INIT_TASK { 0,15,15, 0,{{},},0,... 修改为*/
-#define INIT_TASK { 0,15,15,PAGE_SIZE+(long)&init_task, 0,{{},},0,...
-/*也就是增加了PAGE_SIZE+(long)&init_task*/
-
 
 ...
 //删除掉原来的switch_to
