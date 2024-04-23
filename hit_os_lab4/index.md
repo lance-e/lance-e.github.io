@@ -43,28 +43,6 @@
 - 将CPU中所有的寄存器信息保存到该内存地址
 - 再根据目标进程的段描述符，在GDT表中找到目标进程的TSS段，再将该段信息“扣”到CPU上，就完成了进程切换
 
-switch_to(linux/sched.h):
-
-~~~c
-#define switch_to(n) {\
-struct {long a,b;} __tmp; \
-__asm__("cmpl %%ecx,current\n\t" \
-	"je 1f\n\t" \
-	"movw %%dx,%1\n\t" \
-	"xchgl %%ecx,current\n\t" \
-	"ljmp *%0\n\t" \											//实际上switch_to就是一句ljmp指令
-	"cmpl %%ecx,last_task_used_math\n\t" \
-	"jne 1f\n\t" \
-	"clts\n" \
-	"1:" \
-	::"m" (*&__tmp.a),"m" (*&__tmp.b), \
-	"d" (_TSS(n)),"c" ((long) task[n])); \
-}
-
-#define _TSS(n) ((((unsigned long) n)<<4)+(FIRST_TSS_ENTRY<<3))
-#define FIRST_TSS_ENTRY 4
-~~~
-
 ### 3.实验开始
 
 ##### 1.修改switch_to相关
@@ -374,5 +352,11 @@ movl %ebx,ESP0(%ecx)
 为什么要在切换完 LDT 之后要重新设置 fs=0x17？而且为什么重设操作要出现在切换完 LDT 之后，出现在 LDT 之前又会怎么样？
 
 难懂，跳过，
+
+### 5.总结
+
+参考博客：[哈工大操作系统实验四——基于内核栈切换的进程切换（极其详细）](https://blog.csdn.net/lyj1597374034/article/details/111033682?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522162246292016780255217157%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fall.%2522%257D&request_id=162246292016780255217157&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~first_rank_v2~rank_v29-6-111033682.first_rank_v2_pc_rank_v29&utm_term=%E5%9F%BA%E4%BA%8E%E5%86%85%E6%A0%B8%E6%A0%88%E7%9A%84%E8%BF%9B%E7%A8%8B%E5%88%87%E6%8D%A2&spm=1018.2226.3001.4187)
+
+这个lab是我目前来说做过最难的一个lab，基本上都是参考其他优秀博客，很多晦涩难懂的概念以及过程。对于基于内核栈切换线程的基本流程了解了个大概，应该会在之后写小内核会再深入理解一下。
 
 
