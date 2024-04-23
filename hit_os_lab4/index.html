@@ -30,7 +30,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/lance-e.github.io\/hit_os_lab4\/"
-        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "lab","wordcount":  973 ,
+        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "lab","wordcount":  949 ,
         "url": "https:\/\/lance-e.github.io\/hit_os_lab4\/","datePublished": "2024-04-23T23:28:17+08:00","dateModified": "2024-04-23T23:28:17+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
             "@type": "Organization",
             "name": "lance","logo": "https:\/\/avatars.githubusercontent.com\/u\/139835134?s=400\u0026u=821ed61ec1049b862844e4b578ccbc46f274d65d\u0026v=4"},"author": {
@@ -110,7 +110,7 @@
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Hit_os_lab4</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>lance</a></span>&nbsp;<span class="post-category">included in <a href="/categories/os/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>os</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-04-23">2024-04-23</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;973 words&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-04-23">2024-04-23</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;949 words&nbsp;
                 <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;5 minutes&nbsp;<span id="/hit_os_lab4/" class="leancloud_visitors" data-flag-title="Hit_os_lab4">
                         <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;views
                     </span>&nbsp;</div>
@@ -496,8 +496,7 @@
 </span></span></code></pre></td></tr></table>
 </div>
 </div><p>这里引用实验手册原话：</p>
-<p>​	关于 PC 的切换，和前面论述的一致，依靠的就是 <code>switch_to</code> 的最后一句指令 ret，虽然简单，但背后发生的事却很多：<code>schedule()</code> 函数的最后调用了这个 <code>switch_to</code> 函数，所以这句指令 ret 就返回到下一个进程（目标进程）的 <code>schedule()</code> 函数的末尾，遇到的是&quot;}&quot;，继续 ret 回到调用的 <code>schedule()</code> 地方，是在中断处理中调用的，所以回到了中断处理中，就到了中断返回的地址，再调用 iret 就到了目标进程的用户态程序去执行，和书中论述的内核态线程切换的五段论是完全一致的。</p>
-<p>​	first_return_from_kernel要完成什么工作？PCB 切换完成、内核栈切换完成、LDT 切换完成，接下来应该那个“内核级线程切换五段论”中的最后一段切换了，即完成用户栈和用户代码的切换，依靠的核心指令就是 iret，当然在切换之前应该回复一下执行现场，主要就是相关寄存器的恢复</p>
+<p>​</p>
 <p>然后是修改sched.h:</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
