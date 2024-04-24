@@ -122,6 +122,8 @@ void schedule(void)
 }
 ~~~
 
+
+
 switch_to依次主要完成如下功能：
 
 - 先处理栈帧，即处理`ebp`寄存器
@@ -139,8 +141,6 @@ switch_to依次主要完成如下功能：
   - LDT切换
 
   - PC指针(CS:EIP)切换
-
-
 
 syscall.s中修改：
 
@@ -208,11 +208,11 @@ first_return_from_kernel:
 
 这里引用实验手册原话：
 
-​	关于 PC 的切换，和前面论述的一致，依靠的就是 `switch_to` 的最后一句指令 ret，虽然简单，但背后发生的事却很多：`schedule()` 函数的最后调用了这个 `switch_to` 函数，所以这句指令 ret 就返回到下一个进程（目标进程）的 `schedule()` 函数的末尾，遇到的是"}"，继续 ret 回到调用的 `schedule()` 地方，是在中断处理中调用的，所以回到了中断处理中，就到了中断返回的地址，再调用 iret 就到了目标进程的用户态程序去执行，和书中论述的内核态线程切换的五段论是完全一致的。
+​	关于 PC 的切换，和前面论述的一致，依靠的就是 `switch_to` 的最后一句指令 ret，虽然简单，但背后发生的事却很多：`schedule()` 函数的最后调用了这个 `switch_to` 函数，所以这句指令 ret 就返回到下一个进程（目标进程）的 `schedule()` 函数的末尾，遇到的是}，继续 ret 回到调用的 `schedule()` 地方，是在中断处理中调用的，所以回到了中断处理中，就到了中断返回的地址，再调用 iret 就到了目标进程的用户态程序去执行，和书中论述的内核态线程切换的五段论是完全一致的。
 
-​	first_return_from_kernel要完成什么工作？PCB 切换完成、内核栈切换完成、LDT 切换完成，接下来应该那个“内核级线程切换五段论”中的最后一段切换了，即完成用户栈和用户代码的切换，依靠的核心指令就是 iret，当然在切换之前应该回复一下执行现场，主要就是相关寄存器的恢复
+​	`first_return_from_kernel` 要完成什么工作？PCB 切换完成、内核栈切换完成、LDT 切换完成，接下来应该那个“内核级线程切换五段论”中的最后一段切换了，即完成用户栈和用户代码的切换，依靠的核心指令就是 iret，当然在切换之前应该回复一下执行现场，主要就是 `eax,ebx,ecx,edx,esi,edi,gs,fs,es,ds` 等寄存器的恢复.
 
-然后是修改sched.h，记得删除原来的switch_to:
+然后是修改sched.h:
 
 ~~~c
 struct task_struct {
@@ -227,6 +227,12 @@ struct task_struct {
 /* various fields */
 	
 };
+
+...
+#define INIT_TASK \
+{ 0,15,15,PAGE_SIZE+(long)&init_task, \
+  ...
+}
 
 ...
 //删除掉原来的switch_to
@@ -373,5 +379,4 @@ movl %ebx,ESP0(%ecx)
 参考博客：[哈工大操作系统实验四——基于内核栈切换的进程切换（极其详细）](https://blog.csdn.net/lyj1597374034/article/details/111033682?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522162246292016780255217157%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fall.%2522%257D&request_id=162246292016780255217157&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~first_rank_v2~rank_v29-6-111033682.first_rank_v2_pc_rank_v29&utm_term=%E5%9F%BA%E4%BA%8E%E5%86%85%E6%A0%B8%E6%A0%88%E7%9A%84%E8%BF%9B%E7%A8%8B%E5%88%87%E6%8D%A2&spm=1018.2226.3001.4187)
 
 这个lab是我目前来说做过最难的一个lab，基本上都是参考其他优秀博客，很多晦涩难懂的概念以及过程。对于基于内核栈切换线程的基本流程了解了个大概，应该会在之后写小内核会再深入理解一下。
-
 
