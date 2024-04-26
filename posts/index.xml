@@ -4,7 +4,15 @@
         <link>https://lance-e.github.io/posts/</link>
         <description>All Posts | share knowledge</description>
         <generator>Hugo -- gohugo.io</generator><language>en</language><managingEditor>437653103@qq.com (lance)</managingEditor>
-            <webMaster>437653103@qq.com (lance)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><lastBuildDate>Tue, 23 Apr 2024 23:28:17 &#43;0800</lastBuildDate><atom:link href="https://lance-e.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+            <webMaster>437653103@qq.com (lance)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><lastBuildDate>Fri, 26 Apr 2024 12:50:43 &#43;0800</lastBuildDate><atom:link href="https://lance-e.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+    <title>Hit_os_lab5</title>
+    <link>https://lance-e.github.io/hit_os_lab5/</link>
+    <pubDate>Fri, 26 Apr 2024 12:50:43 &#43;0800</pubDate>
+    <author>lance</author>
+    <guid>https://lance-e.github.io/hit_os_lab5/</guid>
+    <description><![CDATA[哈工大操作系统lab5]]></description>
+</item>
+<item>
     <title>Hit_os_lab4</title>
     <link>https://lance-e.github.io/hit_os_lab4/</link>
     <pubDate>Tue, 23 Apr 2024 23:28:17 &#43;0800</pubDate>
@@ -75,14 +83,6 @@
     <author>lance</author>
     <guid>https://lance-e.github.io/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%BA%8C%E6%9E%84%E5%BB%BA%E7%AE%80%E6%98%93%E5%AE%B9%E5%99%A8/</guid>
     <description><![CDATA[构建简易容器，实现namespace和cgroup]]></description>
-</item>
-<item>
-    <title>从0到1写docker之一概念理解</title>
-    <link>https://lance-e.github.io/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3/</link>
-    <pubDate>Sat, 24 Feb 2024 20:41:30 &#43;0800</pubDate>
-    <author>lance</author>
-    <guid>https://lance-e.github.io/%E4%BB%8E0%E5%88%B01%E5%86%99docker%E4%B9%8B%E4%B8%80%E6%A6%82%E5%BF%B5%E7%90%86%E8%A7%A3/</guid>
-    <description><![CDATA[理解docker的三大底座概念]]></description>
 </item>
 </channel>
 </rss>
