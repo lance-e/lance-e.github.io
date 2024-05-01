@@ -177,91 +177,133 @@ int main(){
 
 增加信号量的系统调用，这里的相关原理与lab2紧密相关，
 
-添加系统调用的过程这里不再演示，主要看一下信号量的实现：
-
-linux/sem.h:
-
-~~~c
-#ifndef _SEM_H
-#define _SEM_H
-#include<linux/sched.h>
-typedef struct {
-  char* name[20];
-  int value;
-  struct task_struct * queue;
-}sem_t;
-#endif
-~~~
+自己老是写错，这里就直接参考别人的博客实现：
 
 kernel/sem.c:
 
 ~~~c
-#include<linux/sem.h>
-#include<linux/sched.h>
-#include<asm/system.h>
-int flag = 0 ;
-sem_t sem[20]; 
-sem_t* sys_sem_open(const char * name,unsigned int value){
-	if (!flag){
-    for (int i = 0 ; i < 20 ;i ++){
-      sem[i].name[0] = "\0";
-      sem[i].value = 0 ;
-      sem[i].queue = 0;
+#include <asm/io.h>
+#include <asm/segment.h>
+#include <asm/system.h>
+#include <linux/fdreg.h>
+#include <linux/kernel.h>
+#include <linux/sched.h>
+#include <linux/sem.h>
+#include <linux/tty.h>
+#include <unistd.h>
+// #include <string.h>
+
+sem_t semtable[SEMTABLE_LEN];
+int cnt = 0;
+
+sem_t *sys_sem_open(const char *name, unsigned int value)
+{
+    char kernelname[SEM_NAME_LEN] = {'\0'};
+    int isExist = 0;
+    int i = 0;
+    int name_cnt = 0;
+    while (get_fs_byte(name + name_cnt) != '\0')
+        name_cnt++;
+    if (name_cnt > SEM_NAME_LEN)
+        return NULL;
+    for (i = 0; i < name_cnt; i++)
+        kernelname[i] = get_fs_byte(name + i);
+    int name_len = strlen(kernelname);
+    int sem_name_len = 0;
+    sem_t *p = NULL;
+    for (i = 0; i < cnt; i++)
+    {
+        sem_name_len = strlen(semtable[i].name);
+        if (sem_name_len == name_len)
+        {
+            if (!strcmp(kernelname, semtable[i].name)) 
+            {
+                isExist = 1;
+                break;
+            }
+        }
     }
-  }
-  cli();
-  for (int i= 0 ; i< 20;i++){
-    if (sem[i].name == name){
-      sti();
-      return &sem[i];
-    }else if (sem[i].name == ""){
-      sem[i].name = name;
-      sem[i].value = value;
+    if (isExist == 1)
+    {
+        p = (sem_t *)(&semtable[i]);
+        // printk("find previous name!\n");
     }
-  }
-
-
-}
-int sys_sem_wait(sem_t *sem){
-	cli();
-  while(sem.value< 0 ) sleep_on(&(sem->queue));
-  sem.value--;
-  sli();
-  if (sem.value < 0 )return -1;
-  else return 0;
-}
-
-int sys_sem_post(sem_t * sem){
-	cli();
-  if (sem.value++<= 0)wake_up(&(sem->queue));
-  sti();
-  return 0;
-}
-int sys_sem_unlink(const char * name){
-  int isexist = 0 ;
-  cli();
-	for (int i = 0 ; i < 20;i++){
-    if (strcmp(sem[i].name ,name) == 0){
-      isexist = 1;
-      if (i < 19){
-       	for (int j= i ;j < 19;j++){
-      		strcpy(sem[j].name,sem[j+1].name);
-      		sem[j].value = sem[j+1].name;
-      		sem[j].queue = sem[j+1].queue;
-      	}
-      }else {
-        sem[i].name[0]="\0";
-        sem[i].value = 0;
-        sem[i].queue =0;
-      }
+    else
+    {
+        i = 0;
+        for (i = 0; i < name_len; i++)
+        {
+            semtable[cnt].name[i] = kernelname[i];
+        }
+        semtable[cnt].value = value;
+        p = (sem_t *)(&semtable[cnt]);
+        // printk("creat name!\n");
+        cnt++;
     }
-  }
-  sli();
-  if (!isexist)return -1;
-  else return 0;
+    return p;
 }
 
+int sys_sem_wait(sem_t *sem)
+{
+    cli();
+    while (sem->value <= 0) 
+        sleep_on(&(sem->queue));  
+    sem->value--;
+    sti();
+    return 0;
+}
+int sys_sem_post(sem_t *sem)
+{
+    cli();
+    sem->value++;
+    if ((sem->value) <= 1)
+        wake_up(&(sem->queue));
+    sti();
+    return 0;
+}
+
+int sys_sem_unlink(const char *name)
+{
+    char kernelname[100];
+    int isExist = 0;
+    int i = 0;
+    int name_cnt = 0;
+    while (get_fs_byte(name + name_cnt) != '\0')
+        name_cnt++;
+    if (name_cnt > SEM_NAME_LEN)
+        return NULL;
+    for (i = 0; i < name_cnt; i++)
+        kernelname[i] = get_fs_byte(name + i);
+    int name_len = strlen(name);
+    int sem_name_len = 0;
+    for (i = 0; i < cnt; i++)
+    {
+        sem_name_len = strlen(semtable[i].name);
+        if (sem_name_len == name_len)
+        {
+            if (!strcmp(kernelname, semtable[i].name))
+            {
+                isExist = 1;
+                break;
+            }
+        }
+    }
+    if (isExist == 1)
+    {
+        int tmp = 0;
+        for (tmp = i; tmp <= cnt; tmp++)
+        {
+            semtable[tmp] = semtable[tmp + 1];
+        }
+        cnt = cnt - 1;
+        return 0;
+    }
+    else
+        return -1;
+}
 ~~~
+
+这里就不将之前的pc.c移植到linux0.11中了
 
 ### 3.回答问题
 
@@ -311,6 +353,5 @@ Consumer()
 
 ### 4.总结
 
-信号量是为了多进程同步协作，在该lab中，进行了信号量的实现与应用，实现的部分参考[LOVE 6的博客](https://love6.blog.csdn.net/article/details/117482526),应用部分参考[信号量的应用](https://blog.csdn.net/weixin_45666853/article/details/104947170?spm=1001.2014.3001.5501),感觉自己的代码能力有待提高😫
-
+信号量是为了多进程同步协作，在该lab中，进行了信号量的实现与应用，实现的部分参考[信号量的实现](https://github.com/NaChen95/Linux0.11/commit/4a6a351f933e6e969843ff34b19af0c7993ef783#diff-b2e1ab2f039bf6e283545365d1c4a11c7e46fad5887fa0a53222f7297724dc89),应用部分参考[信号量的应用](https://blog.csdn.net/weixin_45666853/article/details/104947170?spm=1001.2014.3001.5501),感觉自己的代码能力有待提高😫
 
