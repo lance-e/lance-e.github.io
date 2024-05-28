@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>手写OS系列之bootloader - share knowledge</title><meta name="Description" content="手写bootloader全过程"><meta property="og:title" content="手写OS系列之bootloader" />
+<meta property="og:description" content="手写bootloader全过程" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8Bbootloader/" /><meta property="og:image" content="https://lance-e.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-05-28T16:40:38+08:00" />
+<meta property="article:modified_time" content="2024-05-28T16:40:38+08:00" /><meta property="og:site_name" content="lance&#39;s blog" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://lance-e.github.io/logo.png"/>
+
+<meta name="twitter:title" content="手写OS系列之bootloader"/>
+<meta name="twitter:description" content="手写bootloader全过程"/>
+<meta name="application-name" content="lance&#39;s blog">
+<meta name="apple-mobile-web-app-title" content="lance&#39;s blog"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8Bbootloader/" /><link rel="prev" href="https://lance-e.github.io/hit_os_lab8/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "手写OS系列之bootloader",
+        "inLanguage": "en",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/lance-e.github.io\/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8Bbootloader\/"
+        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "项目","wordcount":  2212 ,
+        "url": "https:\/\/lance-e.github.io\/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8Bbootloader\/","datePublished": "2024-05-28T16:40:38+08:00","dateModified": "2024-05-28T16:40:38+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
+            "@type": "Organization",
+            "name": "lance","logo": "https:\/\/avatars.githubusercontent.com\/u\/139835134?s=400\u0026u=821ed61ec1049b862844e4b578ccbc46f274d65d\u0026v=4"},"author": {
+                "@type": "Person",
+                "name": "lance"
+            },"description": "手写bootloader全过程"
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="share knowledge"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw' aria-hidden='true'></i></span><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/categories/documentation/"> Docs </a><a class="menu-item" href="/about/"> About </a><a class="menu-item" href="https://github.com/dillonzq/LoveIt" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a><a href="javascript:void(0);" class="menu-item language" title="Select Language">
+                    <i class="fa fa-globe" aria-hidden="true"></i>                      
+                    <select class="language-select" id="language-select-desktop" onchange="location = this.value;"><option value="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8Bbootloader/" selected>English</option></select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="share knowledge"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw' aria-hidden='true'></i></span><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/categories/documentation/" title="">Docs</a><a class="menu-item" href="/about/" title="">About</a><a class="menu-item" href="https://github.com/dillonzq/LoveIt" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a><a href="javascript:void(0);" class="menu-item" title="Select Language">
+                    <i class="fa fa-globe fa-fw" aria-hidden="true"></i>
+                    <select class="language-select" onchange="location = this.value;"><option value="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8Bbootloader/" selected>English</option></select>
+                </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">手写OS系列之bootloader</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>lance</a></span>&nbsp;<span class="post-category">included in <a href="/categories/os/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>os</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-05-28">2024-05-28</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;2212 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;11 minutes&nbsp;<span id="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8Bbootloader/" class="leancloud_visitors" data-flag-title="手写OS系列之bootloader">
+                        <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;views
+                    </span>&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1操作系统是如何启动的呢">1.操作系统是如何启动的呢？</a></li>
+        <li><a href="#2手写mbr">2.手写MBR</a></li>
+        <li><a href="#3手写boader">3.手写BOADER</a>
+          <ul>
+            <li>
+              <ul>
+                <li><a href="#gdt结构">GDT结构：</a></li>
+                <li><a href="#保护模式和实模式">保护模式和实模式：</a>
+                  <ul>
+                    <li><a href="#1实模式的特点">1.实模式的特点：</a></li>
+                    <li><a href="#2进入保护模式前的三个步骤">2.进入保护模式前的三个步骤：</a></li>
+                    <li><a href="#3进入保护模式的两个需要解决的问题">3.进入保护模式的两个需要解决的问题：</a></li>
+                  </ul>
+                </li>
+                <li><a href="#获取物理内存容量方法">获取物理内存容量方法：</a></li>
+                <li><a href="#分页机制">分页机制</a></li>
+                <li><a href="#加载内核">加载内核：</a></li>
+                <li><a href="#完整代码">完整代码：</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li><a href="#4总结">4.总结</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h1 id="手写os系列之boot-loader">手写OS系列之boot loader</h1>
+<h3 id="1操作系统是如何启动的呢">1.操作系统是如何启动的呢？</h3>
+<p>首先先区别一下“载入内存”与“程序运行”区别：</p>
+<ul>
+<li>载入内存：程序被加载器加载到内存某个区域</li>
+<li>程序运行：CPU的cs:ip指向程序的起始地址</li>
+</ul>
+<p>所以“载入内存” !=“程序运行”</p>
+<p>背景知识：intel 8086有20条地址总线，可以访问2^20=1MB内存，也就是0x00000到0xFFFFF。BIOS(basic input &amp; output system)处于0xF0000到0xFFFFF,大小为64kb。</p>
+<p>开机(接电)一瞬间，CPU的cs:ip被强制初始化为0xF000:0xFFF0，因为处于实模式中，段基址左移四位，再加上段内偏移地址，可得cs:ip指向0xFFFF0，也就是BIOS的入口地址。bios入口在0xFFFF0~0xFFFFF，大小只有16b，这么小的空间，那么也只能是一条跳转指令，跳转到真正开始的位置。</p>
+<p>BIOS执行结束之后，就该执行MBR(主引导记录main boot record)了。但在跳转之前，会先检验启动盘中的0盘0道1扇区（也就是最开始的扇区），该扇区的结尾必须是0x55，0xaa！BIOS才可以将MBR加载到0x7c00。</p>
+<p>MBR再对硬盘操作，读取出硬盘中指定扇区里的loader程序加载到内存，结束后跳转到loader所在的内存继续取指执行。</p>
+<p>loader的主要负责实模式向保护模式等过渡。</p>
+<p><strong>为什么是0x7c00呢？</strong> 书中提到：</p>
+<ul>
+<li>早期的PC 5150 BIOS研发工程师为以32kb为最小内存的操作系统设计BIOS，32k = 0x8000</li>
+<li>MBR本身大小为512字节，再为所用的栈分配内存，一共分配了1kb</li>
+<li>为了尽可能保护MBR不被过早破坏，所以放在最后1kb(0x400);</li>
+<li>所以最后放在了0x8000-0x0400 = 0x7c00</li>
+</ul>
+<h3 id="2手写mbr">2.手写MBR</h3>
+<p>mbr加载boader：对硬盘设备操作，进行读取和加载，把loader程序加载到指定内存位置。</p>
+<p>对io端口操作：</p>
+<ul>
+<li>in: in ax, dx / in al,dx</li>
+<li>out: out dx, al /out dx,ax/ out 立即数,al / out 立即数,ax</li>
+</ul>
+<p>硬盘操作基本流程：</p>
+<ul>
+<li>先选择通道，想sector count寄存器写入要操作的扇区数</li>
+<li>往该通道的三个LBA寄存器写入扇区的起始地址的低24位</li>
+<li>然后往device寄存器中写入24～27位，并设置第四位选择主从盘，设置第六位选择LBA模式还是CHS模式</li>
+<li>然后向该通道的command寄存器中写入操作命令，这里主要用到三个
+<ul>
+<li>Identify:0xEC,硬盘识别</li>
+<li>read sector：0x20，读扇区</li>
+<li>write sector：0x30，写扇区</li>
+</ul>
+</li>
+<li>读区status寄存器，判断硬盘工作是否完成</li>
+<li>若是读磁盘就接着把数据读出，若是写磁盘就结束了</li>
+</ul>
+<p>boot/mbr.S:这里就是我们写的mbr代码，前面部分是操作显存，然后打印我们定义的字符（无关紧要），后面就开始操作硬盘，</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="o">%</span><span class="n">include</span>	<span class="s2">&#34;boot.inc&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">SECTION</span> <span class="n">MBR</span> <span class="n">vstart</span><span class="o">=</span><span class="mh">0x7c00</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ax</span><span class="p">,</span><span class="n">cs</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span> 	<span class="n">ds</span><span class="p">,</span><span class="n">ax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span> 	<span class="n">es</span><span class="p">,</span><span class="n">ax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span> 	<span class="n">ss</span><span class="p">,</span><span class="n">ax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span> 	<span class="n">fs</span><span class="p">,</span><span class="n">ax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span> 	<span class="n">sp</span><span class="p">,</span><span class="mh">0x7c00</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span> 	<span class="n">ax</span><span class="p">,</span><span class="mh">0xb800</span> 		<span class="p">;</span><span class="n">add</span> <span class="n">to</span> <span class="n">operate</span> <span class="n">the</span> <span class="n">graphics</span> <span class="n">memory</span><span class="p">,</span><span class="ow">and</span> <span class="mh">0xb8000</span> <span class="n">is</span> <span class="n">the</span> <span class="n">begining</span> <span class="n">of</span> <span class="n">the</span> <span class="n">graphics</span> <span class="n">memory</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">gs</span><span class="p">,</span><span class="n">ax</span>			
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="n">clear</span> <span class="n">the</span> <span class="n">screen</span><span class="p">:</span> <span class="n">use</span> <span class="n">the</span> <span class="mh">0x10</span> <span class="n">interrupt</span>
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="n">input</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="n">AH</span> <span class="o">=</span> <span class="mh">0x06</span><span class="p">(</span><span class="n">function</span> <span class="n">number</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="n">AL</span> <span class="o">=</span> <span class="n">the</span> <span class="n">upScroll</span><span class="s1">&#39;s row number</span>
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="n">BH</span> <span class="o">=</span> <span class="n">the</span> <span class="n">attribute</span> <span class="n">of</span> <span class="n">the</span> <span class="n">upScroll</span>
+</span></span><span class="line"><span class="cl"><span class="p">;(</span><span class="n">CL</span><span class="p">,</span><span class="n">CH</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">upper</span> <span class="n">left</span> <span class="n">corner</span> <span class="n">of</span> <span class="n">windows</span>
+</span></span><span class="line"><span class="cl"><span class="p">;(</span><span class="n">DL</span><span class="p">,</span><span class="n">DH</span><span class="p">)</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span> <span class="ne">int</span> <span class="n">the</span> <span class="n">lower</span> <span class="n">right</span> <span class="n">corner</span> <span class="n">of</span> <span class="n">windows</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span> 	<span class="n">ax</span><span class="p">,</span><span class="mh">0x0600</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span> 	<span class="n">bx</span><span class="p">,</span><span class="mh">0x0700</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span> 	<span class="n">cx</span><span class="p">,</span><span class="mi">0</span>			<span class="p">;</span><span class="n">the</span> <span class="n">upper</span> <span class="n">left</span> <span class="n">corner</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span> 	<span class="n">dx</span><span class="p">,</span><span class="mh">0x184f</span>		<span class="p">;</span><span class="n">the</span> <span class="n">lower</span> <span class="n">right</span> <span class="n">corner</span> <span class="p">(</span><span class="mi">24</span><span class="p">,</span><span class="mi">79</span><span class="p">)</span>  <span class="p">(</span><span class="mh">0x18</span> <span class="o">=</span> <span class="mi">24</span><span class="p">,</span><span class="mh">0x4f</span><span class="o">=</span><span class="mi">79</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="ne">int</span> 	<span class="mh">0x10</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x00</span><span class="p">],</span><span class="s1">&#39;L&#39;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x01</span><span class="p">],</span><span class="mh">0xA4</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x02</span><span class="p">],</span><span class="s1">&#39;O&#39;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x03</span><span class="p">],</span><span class="mh">0xA4</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x04</span><span class="p">],</span><span class="s1">&#39;O&#39;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x05</span><span class="p">],</span><span class="mh">0xA4</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x06</span><span class="p">],</span><span class="s1">&#39;N&#39;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x07</span><span class="p">],</span><span class="mh">0xA4</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x08</span><span class="p">],</span><span class="s1">&#39;G&#39;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x09</span><span class="p">],</span><span class="mh">0xA4</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x0A</span><span class="p">],</span><span class="s1">&#39;-&#39;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x0B</span><span class="p">],</span><span class="mh">0xA4</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x0C</span><span class="p">],</span><span class="s1">&#39;O&#39;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x0D</span><span class="p">],</span><span class="mh">0xA4</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x0E</span><span class="p">],</span><span class="s1">&#39;S&#39;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mh">0x0F</span><span class="p">],</span><span class="mh">0xA4</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">begin</span> <span class="n">to</span> <span class="nb">load</span> <span class="n">the</span> <span class="n">loader</span>
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">operate</span> <span class="n">the</span> <span class="n">io</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">eax</span><span class="p">,</span><span class="n">LOADER_START_SECTOR</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">bx</span><span class="p">,</span><span class="n">LOADER_BASE_ADDR</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">cx</span><span class="p">,</span><span class="mi">4</span>
+</span></span><span class="line"><span class="cl">	<span class="n">call</span>	<span class="n">rd_disk_m_16</span>
+</span></span><span class="line"><span class="cl">	<span class="n">jmp</span>	<span class="n">LOADER_BASE_ADDR</span>
+</span></span><span class="line"><span class="cl"><span class="n">rd_disk_m_16</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">copy</span> <span class="n">the</span> <span class="n">value</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">esi</span><span class="p">,</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">di</span><span class="p">,</span><span class="n">cx</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">al</span><span class="p">,</span><span class="n">cl</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mh">0x1F2</span>
+</span></span><span class="line"><span class="cl">	<span class="n">out</span>	<span class="n">dx</span><span class="p">,</span><span class="n">al</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">eax</span><span class="p">,</span><span class="n">esi</span>				<span class="p">;</span><span class="n">recover</span> <span class="n">the</span> <span class="n">value</span> <span class="n">of</span> <span class="n">ax</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mh">0x1F3</span>
+</span></span><span class="line"><span class="cl">	<span class="n">out</span>	<span class="n">dx</span><span class="p">,</span><span class="n">al</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">cl</span><span class="p">,</span><span class="mh">0x8</span>
+</span></span><span class="line"><span class="cl">	<span class="n">shr</span>	<span class="n">eax</span><span class="p">,</span><span class="n">cl</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mh">0x1F4</span>
+</span></span><span class="line"><span class="cl">	<span class="n">out</span>	<span class="n">dx</span><span class="p">,</span><span class="n">al</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">shr</span>	<span class="n">eax</span><span class="p">,</span><span class="n">cl</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mh">0x1F5</span>
+</span></span><span class="line"><span class="cl">	<span class="n">out</span>	<span class="n">dx</span><span class="p">,</span><span class="n">al</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">shr</span>	<span class="n">eax</span><span class="p">,</span><span class="n">cl</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">and</span>	<span class="n">al</span><span class="p">,</span><span class="mh">0x0f</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">or</span> 	<span class="n">al</span><span class="p">,</span><span class="mh">0xe0</span>			<span class="p">;</span><span class="mi">11100000</span> <span class="o">=</span> <span class="mh">0xe0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mh">0x1F6</span>
+</span></span><span class="line"><span class="cl">	<span class="n">out</span>	<span class="n">dx</span><span class="p">,</span><span class="n">al</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ax</span><span class="p">,</span><span class="mh">0x20</span>		
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mh">0x1F7</span>
+</span></span><span class="line"><span class="cl">	<span class="n">out</span>	<span class="n">dx</span><span class="p">,</span><span class="n">al</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">   <span class="o">.</span><span class="n">not_ready</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">nop</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">in</span>	<span class="n">al</span><span class="p">,</span><span class="n">dx</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">and</span>	<span class="n">al</span><span class="p">,</span><span class="mh">0x88</span>
+</span></span><span class="line"><span class="cl">	<span class="n">cmp</span>	<span class="n">al</span><span class="p">,</span><span class="mh">0x08</span>
+</span></span><span class="line"><span class="cl">	<span class="n">jnz</span>	<span class="o">.</span><span class="n">not_ready</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">begine</span> <span class="n">to</span> <span class="n">loop</span> <span class="n">read</span>
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">set</span> <span class="n">the</span> <span class="n">source</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ax</span><span class="p">,</span><span class="n">di</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mi">256</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mul</span>	<span class="n">dx</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">cx</span><span class="p">,</span><span class="n">ax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mh">0x1F0</span>
+</span></span><span class="line"><span class="cl">   <span class="o">.</span><span class="n">loop_read_data</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">in</span>	<span class="n">ax</span><span class="p">,</span><span class="n">dx</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="p">[</span><span class="n">bx</span><span class="p">],</span><span class="n">ax</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">bx</span><span class="p">,</span><span class="mi">2</span>
+</span></span><span class="line"><span class="cl">	<span class="n">loop</span>	<span class="o">.</span><span class="n">loop_read_data</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">read</span> <span class="n">over</span>
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">times</span> <span class="mi">510</span><span class="o">-</span><span class="p">(</span><span class="o">$-$$</span><span class="p">)</span> <span class="n">db</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">	<span class="n">db</span> 	<span class="mh">0x55</span><span class="p">,</span><span class="mh">0xaa</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>include/boot.inc</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">LOADER_BASE_ADDR equ 0x900
+</span></span><span class="line"><span class="cl">LOADER_START_SECTOR equ 0x2
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="3手写boader">3.手写BOADER</h3>
+<h5 id="gdt结构">GDT结构：</h5>
+<table>
+<thead>
+  <tr>
+    <th>字段名</th>
+    <th>位区域</th>
+    <th>作用</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>段界限0~15</td>
+    <td>低32位0~15</td>
+    <td>表示段边界的扩展最值。<br>代码段和数据段的段扩展方向向上；栈段段段扩展方向向下。加上高32位中的16~19位共20位。<br>此段界限为单位量，还取决于G位的段界限粒度。<br>计算实际段界限边界值：(描述符中段界限+1) *(段界限的粒度大小)-1</td>
+  </tr>
+  <tr>
+    <td>段基址0~15</td>
+    <td>低32位16~31</td>
+    <td>保护模式下，CPU寻址方式为段基址：段内偏移地址，段基址共32位，被分成三份。</td>
+  </tr>
+  <tr>
+    <td>段基址16~23</td>
+    <td>高32位0~7</td>
+    <td>同上段基址</td>
+  </tr>
+  <tr>
+    <td>TYPE</td>
+    <td>高32位8~11</td>
+    <td>指定本描述符类型，与S位共同使用。<br>例如S位为1表示非系统段时，type第0~3位在代码段分别表示A,R,C,X，在数据段分别表示A,W,E,X</td>
+  </tr>
+  <tr>
+    <td>S</td>
+    <td>高32位12</td>
+    <td>指示是否为系统段，0表示系统段，1表示数据段</td>
+  </tr>
+  <tr>
+    <td>DPL</td>
+    <td>高32位13~14</td>
+    <td>描述符特权级(descriptor privilege level)，这两位可表示4种级别:0，1，2，3</td>
+  </tr>
+  <tr>
+    <td>P</td>
+    <td>高32位15</td>
+    <td>表示段是否存在</td>
+  </tr>
+  <tr>
+    <td>段界限16~19</td>
+    <td>高32位16~19</td>
+    <td>同上段界限</td>
+  </tr>
+  <tr>
+    <td>AVL</td>
+    <td>高32位20</td>
+    <td>对os来说随便用，对硬件来说，没有专门的用途</td>
+  </tr>
+  <tr>
+    <td>L</td>
+    <td>高32位21</td>
+    <td>设置是否为64位代码段，1表示64位，0表示32位</td>
+  </tr>
+  <tr>
+    <td>D/B</td>
+    <td>高32位22</td>
+    <td>用来表示指令中的有效地址和操作数大小。<br>对于代码段来说，为D位，D为0表示16位，指令有效地址用ip寄存器，D为1表示32位，指令有效地址用eip寄存器。<br>对于栈段来说，为B位，B为0使用sp寄存器，最大寻址范围为0xFFFF，B为1使用esp寄存器，最大寻址范围为0xFFFFFFFF</td>
+  </tr>
+  <tr>
+    <td>G</td>
+    <td>高32位23</td>
+    <td>指定段界限单位大小(Granularity,粒度)，与段界限共同决定段大小，为0单位为1字节，为1单位为4kb</td>
+  </tr>
+  <tr>
+    <td>段基址24~31</td>
+    <td>高32位24~31</td>
+    <td>同上段基址</td>
+  </tr>
+</tbody>
+</table>
+<h5 id="保护模式和实模式">保护模式和实模式：</h5>
+<p>保护模式和实模式是32位cpu的两种运行模式，可以兼容实模式下的程序，但是不是cpu变成16位cpu。所以实模式与16位cpu无关，是32位cpu提出的概念。实模式下的内存寻址是通过段寄存器中的段基址左移四位+段内偏移地址；保护模式下的内存寻址是通过段寄存器中的选择子，查GDT/LDT，获取段描述符，再根据段描述符中的段基址直接+段内偏移地址。</p>
+<h6 id="1实模式的特点">1.实模式的特点：</h6>
+<ul>
+<li>操作系统和用户程序的特权级相同</li>
+<li>所指向的地址都是物理地址</li>
+<li>用户程序可以自由修改段基址</li>
+<li>访问超过64kb的地址，需要切换段基址</li>
+<li>一次只能运行一个程序，资源利用率低</li>
+<li>共20条地址线，最大可用内存为1mb</li>
+</ul>
+<h6 id="2进入保护模式前的三个步骤">2.进入保护模式前的三个步骤：</h6>
+<ul>
+<li>开启A20地址线</li>
+<li>在gdtr寄存器中加载GDT的地址和偏移量(界限值)(lgdt指令)</li>
+<li>将cr0寄存器的pe位置为1</li>
+</ul>
+<h6 id="3进入保护模式的两个需要解决的问题">3.进入保护模式的两个需要解决的问题：</h6>
+<ul>
+<li>在实模式下的段描述符缓冲寄存器未更新：当每次计算段基址后，会将计算结果更新到段描述符缓冲寄存器，但是实模式下，段基址只有20位，所以此时段描述符缓冲寄存器只有低20位有效。进入保护模式后，很多属性位都是错误的，并且不重新引用一个段时，段描述符缓冲寄存器是不会更新的，所以需要马上更新其值，也就是想办法往相应寄存器中加载选择子。</li>
+<li>流水线指令译码错误：流水线是cpu提高效率采用的一种工作方式，cpu将当前和后续指令同时放在流水线重叠执行，同时取指令，译码，执行。但是进入保护模式后，指令格式就发生了改变，译码就会错误，所以需要当进入保护模式后，清空以实模式的16位指令格式译码的流水线。</li>
+</ul>
+<p>解决方法：使用无条件远跳转指令jmp。</p>
+<h5 id="获取物理内存容量方法">获取物理内存容量方法：</h5>
+<p>使用BIOS中断0x15</p>
+<ul>
+<li>EAX=0xE820,遍历主机上全部内存，迭代式查询，每次只返回一种类型的内存信息，存储内存信息的结构为地址范围描述符结构。</li>
+<li>AX=0xE801，分别检测15mb和16mb～4gb内存</li>
+<li>AH= 0x88，最多检测64mb内存</li>
+</ul>
+<h5 id="分页机制">分页机制</h5>
+<p>在保护模式中，寻址过程为在段寄存器中获取选择子，使用选择子来索引GDT/LDT表中的段描述符，从段描述符中可获取段基址，通过段基址+段内偏移进行寻址，这也叫做线性地址。在未开启分页机制时，线性地址就是物理地址，开启分页机制后，线性机制是虚拟地址，不是物理地址，需要查页表才能获取真实的物理地址。</p>
+<p>为什么要有分页机制：</p>
+<ul>
+<li>没有分页机制前，线性地址=物理地址，是连续且一一对应的，内存利用率低。所以提出了分页机制</li>
+</ul>
+<p>一级页表相关知识：</p>
+<ul>
+<li>cr3控制寄存器存储<strong>页表</strong>物理地址</li>
+<li>一级页表是用一个页表放入1M个标准页，一个页表表示4GB空间</li>
+<li>32位地址表示4GB空间，高20位代表内存块数量，用于索引页，低12位代表内存块大小(4kb)，用于页内寻址</li>
+<li>虚拟地址向物理地址转换的过程中，页表和页表项(<strong>PTE,4字节</strong>)的地址都是物理地址(防止无限套娃)</li>
+<li><strong>物理地址=线性地址高20位在页表中索引的页表项中的物理地址+线性地址低12位</strong></li>
+<li>注意：高20位为索引值，需要x4(页表项大小4字节)，加上页表物理地址,才能求出目标页表项的物理地址</li>
+</ul>
+<p>二级页表相关知识：</p>
+<ul>
+<li>cr3控制寄存器存储<strong>页目录表</strong>物理地址</li>
+<li>二级是用1k个页表，每个页表就只放入1k个标准页，一个页表表示4mb空间</li>
+<li>一级页表大小为4mb，二级页表大小为4kb (= 标准页大小)</li>
+<li>新增页目录表来存储1k个页表，页表物理地址在页目录表中以页目录项(PDE)形式存储，大小也是<strong>4字节</strong>，所以页目录表大小也是4kb</li>
+<li>页目录表共1k项= 2^10,页表共1k项=2^10,每页大小4kb=2^12,所以将32位虚拟地址分成了10位，10位，12位</li>
+<li><strong>物理地址=(线性地址高10位在页目录表中索引到的页目录项中获取页表的物理地址)线性地址中间10位在页表中索引的页表项中的物理地址+线性地址低12位</strong></li>
+<li>注意：高10位和中间10位分别为PDE和PTE索引值，需要x4(页目录项和页表项4字节)，加上页目录表和页表的物理地址，才能求出目标物理地址</li>
+</ul>
+<h5 id="加载内核">加载内核：</h5>
+<p>loader需要进行的操作：</p>
+<ul>
+<li>加载内核：将处在磁盘中的内核文件加载到内存中</li>
+<li>初始化内核：需要在分页之后，将加载的elf内核文件放置到对应虚拟内存地址，然后跳转执行，从此loader工作结束</li>
+</ul>
+<p>内核被加载到内存中，loader会通过其elf结构展开到新的位置，所以说内核在内存中有两份，一份是初始的elf内核文件，一份是解析elf格式后生成的内核映像（真正运行的内核）</p>
+<h5 id="完整代码">完整代码：</h5>
+<p>loader.S:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span><span class="lnt">113
+</span><span class="lnt">114
+</span><span class="lnt">115
+</span><span class="lnt">116
+</span><span class="lnt">117
+</span><span class="lnt">118
+</span><span class="lnt">119
+</span><span class="lnt">120
+</span><span class="lnt">121
+</span><span class="lnt">122
+</span><span class="lnt">123
+</span><span class="lnt">124
+</span><span class="lnt">125
+</span><span class="lnt">126
+</span><span class="lnt">127
+</span><span class="lnt">128
+</span><span class="lnt">129
+</span><span class="lnt">130
+</span><span class="lnt">131
+</span><span class="lnt">132
+</span><span class="lnt">133
+</span><span class="lnt">134
+</span><span class="lnt">135
+</span><span class="lnt">136
+</span><span class="lnt">137
+</span><span class="lnt">138
+</span><span class="lnt">139
+</span><span class="lnt">140
+</span><span class="lnt">141
+</span><span class="lnt">142
+</span><span class="lnt">143
+</span><span class="lnt">144
+</span><span class="lnt">145
+</span><span class="lnt">146
+</span><span class="lnt">147
+</span><span class="lnt">148
+</span><span class="lnt">149
+</span><span class="lnt">150
+</span><span class="lnt">151
+</span><span class="lnt">152
+</span><span class="lnt">153
+</span><span class="lnt">154
+</span><span class="lnt">155
+</span><span class="lnt">156
+</span><span class="lnt">157
+</span><span class="lnt">158
+</span><span class="lnt">159
+</span><span class="lnt">160
+</span><span class="lnt">161
+</span><span class="lnt">162
+</span><span class="lnt">163
+</span><span class="lnt">164
+</span><span class="lnt">165
+</span><span class="lnt">166
+</span><span class="lnt">167
+</span><span class="lnt">168
+</span><span class="lnt">169
+</span><span class="lnt">170
+</span><span class="lnt">171
+</span><span class="lnt">172
+</span><span class="lnt">173
+</span><span class="lnt">174
+</span><span class="lnt">175
+</span><span class="lnt">176
+</span><span class="lnt">177
+</span><span class="lnt">178
+</span><span class="lnt">179
+</span><span class="lnt">180
+</span><span class="lnt">181
+</span><span class="lnt">182
+</span><span class="lnt">183
+</span><span class="lnt">184
+</span><span class="lnt">185
+</span><span class="lnt">186
+</span><span class="lnt">187
+</span><span class="lnt">188
+</span><span class="lnt">189
+</span><span class="lnt">190
+</span><span class="lnt">191
+</span><span class="lnt">192
+</span><span class="lnt">193
+</span><span class="lnt">194
+</span><span class="lnt">195
+</span><span class="lnt">196
+</span><span class="lnt">197
+</span><span class="lnt">198
+</span><span class="lnt">199
+</span><span class="lnt">200
+</span><span class="lnt">201
+</span><span class="lnt">202
+</span><span class="lnt">203
+</span><span class="lnt">204
+</span><span class="lnt">205
+</span><span class="lnt">206
+</span><span class="lnt">207
+</span><span class="lnt">208
+</span><span class="lnt">209
+</span><span class="lnt">210
+</span><span class="lnt">211
+</span><span class="lnt">212
+</span><span class="lnt">213
+</span><span class="lnt">214
+</span><span class="lnt">215
+</span><span class="lnt">216
+</span><span class="lnt">217
+</span><span class="lnt">218
+</span><span class="lnt">219
+</span><span class="lnt">220
+</span><span class="lnt">221
+</span><span class="lnt">222
+</span><span class="lnt">223
+</span><span class="lnt">224
+</span><span class="lnt">225
+</span><span class="lnt">226
+</span><span class="lnt">227
+</span><span class="lnt">228
+</span><span class="lnt">229
+</span><span class="lnt">230
+</span><span class="lnt">231
+</span><span class="lnt">232
+</span><span class="lnt">233
+</span><span class="lnt">234
+</span><span class="lnt">235
+</span><span class="lnt">236
+</span><span class="lnt">237
+</span><span class="lnt">238
+</span><span class="lnt">239
+</span><span class="lnt">240
+</span><span class="lnt">241
+</span><span class="lnt">242
+</span><span class="lnt">243
+</span><span class="lnt">244
+</span><span class="lnt">245
+</span><span class="lnt">246
+</span><span class="lnt">247
+</span><span class="lnt">248
+</span><span class="lnt">249
+</span><span class="lnt">250
+</span><span class="lnt">251
+</span><span class="lnt">252
+</span><span class="lnt">253
+</span><span class="lnt">254
+</span><span class="lnt">255
+</span><span class="lnt">256
+</span><span class="lnt">257
+</span><span class="lnt">258
+</span><span class="lnt">259
+</span><span class="lnt">260
+</span><span class="lnt">261
+</span><span class="lnt">262
+</span><span class="lnt">263
+</span><span class="lnt">264
+</span><span class="lnt">265
+</span><span class="lnt">266
+</span><span class="lnt">267
+</span><span class="lnt">268
+</span><span class="lnt">269
+</span><span class="lnt">270
+</span><span class="lnt">271
+</span><span class="lnt">272
+</span><span class="lnt">273
+</span><span class="lnt">274
+</span><span class="lnt">275
+</span><span class="lnt">276
+</span><span class="lnt">277
+</span><span class="lnt">278
+</span><span class="lnt">279
+</span><span class="lnt">280
+</span><span class="lnt">281
+</span><span class="lnt">282
+</span><span class="lnt">283
+</span><span class="lnt">284
+</span><span class="lnt">285
+</span><span class="lnt">286
+</span><span class="lnt">287
+</span><span class="lnt">288
+</span><span class="lnt">289
+</span><span class="lnt">290
+</span><span class="lnt">291
+</span><span class="lnt">292
+</span><span class="lnt">293
+</span><span class="lnt">294
+</span><span class="lnt">295
+</span><span class="lnt">296
+</span><span class="lnt">297
+</span><span class="lnt">298
+</span><span class="lnt">299
+</span><span class="lnt">300
+</span><span class="lnt">301
+</span><span class="lnt">302
+</span><span class="lnt">303
+</span><span class="lnt">304
+</span><span class="lnt">305
+</span><span class="lnt">306
+</span><span class="lnt">307
+</span><span class="lnt">308
+</span><span class="lnt">309
+</span><span class="lnt">310
+</span><span class="lnt">311
+</span><span class="lnt">312
+</span><span class="lnt">313
+</span><span class="lnt">314
+</span><span class="lnt">315
+</span><span class="lnt">316
+</span><span class="lnt">317
+</span><span class="lnt">318
+</span><span class="lnt">319
+</span><span class="lnt">320
+</span><span class="lnt">321
+</span><span class="lnt">322
+</span><span class="lnt">323
+</span><span class="lnt">324
+</span><span class="lnt">325
+</span><span class="lnt">326
+</span><span class="lnt">327
+</span><span class="lnt">328
+</span><span class="lnt">329
+</span><span class="lnt">330
+</span><span class="lnt">331
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="o">%</span><span class="n">include</span>	<span class="s2">&#34;boot.inc&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">section</span>	<span class="n">loader</span>	<span class="n">vstart</span><span class="o">=</span><span class="n">LOADER_BASE_ADDR</span>
+</span></span><span class="line"><span class="cl"><span class="n">LOADER_STACK_TOP</span>	<span class="n">equ</span>	<span class="n">LOADER_BASE_ADDR</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">GDT_BASE</span><span class="p">:</span>	<span class="n">dd</span>	<span class="mh">0x00000000</span>			<span class="p">;</span><span class="n">this</span> <span class="n">is</span> <span class="mi">0</span><span class="n">th</span> <span class="n">descriptor</span>
+</span></span><span class="line"><span class="cl">		<span class="n">dd</span>	<span class="mh">0x00000000</span>
+</span></span><span class="line"><span class="cl"><span class="n">CODE_DESC</span><span class="p">:</span>	<span class="n">dd</span>	<span class="mh">0x0000FFFF</span>
+</span></span><span class="line"><span class="cl">		<span class="n">dd</span>	<span class="n">DESC_CODE_HIGH4</span>
+</span></span><span class="line"><span class="cl"><span class="n">DATA_STACK_DESC</span><span class="p">:</span> <span class="n">dd</span>	<span class="mh">0x0000FFFF</span>
+</span></span><span class="line"><span class="cl">		<span class="n">dd</span>	<span class="n">DESC_DATA_HIGH4</span>
+</span></span><span class="line"><span class="cl"><span class="n">VIDEO_DESC</span><span class="p">:</span>	<span class="n">dd</span>	<span class="mh">0x80000007</span>			<span class="p">;</span><span class="n">limit</span><span class="o">=</span><span class="p">(</span><span class="mh">0xbffff</span> <span class="o">-</span> <span class="mh">0xb8000</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span><span class="n">k</span> <span class="o">=</span> <span class="mh">0x7</span>
+</span></span><span class="line"><span class="cl">		<span class="n">dd</span>	<span class="n">DESC_VIDEO_HIGH4</span>
+</span></span><span class="line"><span class="cl"><span class="n">GDT_SIZE</span>	<span class="n">equ</span>	<span class="o">$</span> <span class="o">-</span> <span class="n">GDT_BASE</span>
+</span></span><span class="line"><span class="cl"><span class="n">GDT_LIMIT</span>	<span class="n">equ</span>	<span class="n">GDT_SIZE</span> <span class="o">-</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">times</span>	<span class="mi">60</span>	<span class="n">dq</span>	<span class="mi">0</span>				<span class="p">;</span><span class="n">reserve</span> <span class="mi">60</span> <span class="n">descriptor</span> <span class="p">(</span><span class="mi">8</span> <span class="n">byte</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">SELECTOR_CODE</span>	<span class="n">equ</span>	<span class="p">(</span><span class="mh">0x0001</span> <span class="o">&lt;&lt;</span> <span class="mi">3</span> <span class="p">)</span> <span class="o">+</span> <span class="n">TI_GDT</span> <span class="o">+</span> <span class="n">RPL0</span>
+</span></span><span class="line"><span class="cl"><span class="n">SELECTOR_DATA</span>	<span class="n">equ</span>	<span class="p">(</span><span class="mh">0x0002</span> <span class="o">&lt;&lt;</span> <span class="mi">3</span> <span class="p">)</span> <span class="o">+</span> <span class="n">TI_GDT</span> <span class="o">+</span> <span class="n">RPL0</span>
+</span></span><span class="line"><span class="cl"><span class="n">SELECTOR_VIDEO</span>	<span class="n">equ</span>	<span class="p">(</span><span class="mh">0x0003</span> <span class="o">&lt;&lt;</span> <span class="mi">3</span> <span class="p">)</span> <span class="o">+</span> <span class="n">TI_GDT</span> <span class="o">+</span> <span class="n">RPL0</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">total_mem_bytes</span>	<span class="n">dd</span>	<span class="mi">0</span>				<span class="p">;</span><span class="o">!!!</span><span class="n">save</span> <span class="n">the</span> <span class="n">total</span> <span class="n">memory</span> <span class="n">capacity</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">gdt_ptr</span>		<span class="n">dw</span>	<span class="n">GDT_LIMIT</span>			<span class="p">;</span><span class="n">the</span> <span class="n">pointer</span> <span class="n">of</span> <span class="n">GDT</span>
+</span></span><span class="line"><span class="cl">		<span class="n">dd</span>	<span class="n">GDT_BASE</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl"><span class="n">ards_buf</span>	<span class="n">times</span>	<span class="mi">244</span>	<span class="n">db</span>	<span class="mi">0</span>		<span class="p">;</span><span class="ow">in</span> <span class="n">order</span> <span class="n">to</span> <span class="n">memory</span> <span class="n">alignment</span> 
+</span></span><span class="line"><span class="cl"><span class="n">ards_nr</span>		<span class="n">dw</span>	<span class="mi">0</span>				<span class="p">;</span><span class="n">record</span> <span class="n">the</span> <span class="n">number</span> <span class="n">of</span> <span class="n">ARDS</span>
+</span></span><span class="line"><span class="cl"><span class="n">loader_start</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">get</span> <span class="n">the</span> <span class="n">physic</span> <span class="n">memory</span>
+</span></span><span class="line"><span class="cl">	<span class="n">xor</span>	<span class="n">ebx</span><span class="p">,</span><span class="n">ebx</span>					<span class="p">;</span><span class="n">EBX</span><span class="p">:</span><span class="n">set</span> <span class="n">the</span> <span class="n">ebx</span> <span class="o">=</span> <span class="mi">0</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">edx</span><span class="p">,</span><span class="mh">0x534d4150</span>				<span class="p">;</span><span class="n">EDX</span><span class="p">:</span><span class="n">the</span> <span class="n">ascii</span> <span class="n">of</span> <span class="n">SMAP</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">di</span><span class="p">,</span><span class="n">ards_buf</span>				<span class="p">;</span><span class="n">DI</span><span class="p">:</span><span class="n">set</span> <span class="n">the</span> <span class="n">buffer</span> <span class="n">of</span> <span class="n">ARDS</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="o">---------------------</span><span class="ne">int</span> <span class="mh">0x15</span> <span class="n">eax</span><span class="o">=</span><span class="mh">0xe820</span><span class="o">------------------------</span>
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">e820_mem_get_loop</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">eax</span><span class="p">,</span><span class="mh">0x0000e820</span>				<span class="p">;</span><span class="n">EAX</span><span class="p">:</span><span class="n">set</span> <span class="n">the</span> <span class="n">function</span> <span class="n">number</span> <span class="n">is</span> <span class="mh">0xe820</span> <span class="n">per</span> <span class="n">loop</span><span class="p">,</span><span class="n">because</span> <span class="n">of</span> <span class="n">the</span> <span class="n">EAX</span> <span class="n">will</span> <span class="n">update</span> <span class="n">to</span> <span class="n">the</span> <span class="mh">0x534d4150</span> <span class="n">after</span> <span class="n">eachinterruption</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ecx</span><span class="p">,</span><span class="mi">20</span>					<span class="p">;</span><span class="n">ECX</span><span class="p">:</span><span class="n">set</span> <span class="n">the</span> <span class="n">size</span> <span class="n">of</span> <span class="n">ARDS</span>
+</span></span><span class="line"><span class="cl">	<span class="ne">int</span>	<span class="mh">0x15</span>				
+</span></span><span class="line"><span class="cl">	<span class="n">jc</span>	<span class="o">.</span><span class="n">e820_failed_so_try_e801</span>	
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">di</span><span class="p">,</span><span class="n">cx</span>					<span class="p">;</span><span class="n">add</span> <span class="mi">20</span> <span class="n">byte</span> <span class="n">that</span> <span class="n">make</span> <span class="n">the</span> <span class="n">di</span> <span class="n">point</span> <span class="n">to</span> <span class="n">the</span> <span class="n">next</span> <span class="n">ARDS</span>
+</span></span><span class="line"><span class="cl">	<span class="n">inc</span>	<span class="n">word</span>	<span class="p">[</span><span class="n">ards_nr</span><span class="p">]</span>			<span class="p">;</span><span class="n">record</span> <span class="n">the</span> <span class="n">number</span> <span class="n">of</span> <span class="n">the</span> <span class="n">ARDS</span>
+</span></span><span class="line"><span class="cl">	<span class="n">cmp</span>	<span class="n">ebx</span><span class="p">,</span><span class="mi">0</span>					<span class="p">;</span><span class="k">if</span> <span class="n">the</span> <span class="n">ebx</span> <span class="o">=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">the</span> <span class="n">cf</span> <span class="o">!=</span> <span class="mi">1</span> <span class="n">mean</span> <span class="n">that</span> <span class="n">the</span> <span class="n">ARDS</span> <span class="n">are</span> <span class="n">all</span> <span class="k">return</span><span class="o">.</span><span class="n">this</span> <span class="n">one</span> <span class="n">is</span> <span class="n">the</span> <span class="n">last</span> <span class="n">one</span>
+</span></span><span class="line"><span class="cl">	<span class="n">jnz</span>	<span class="o">.</span><span class="n">e820_mem_get_loop</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">calculate</span> <span class="n">the</span> <span class="n">memory</span> <span class="n">capacity</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">cx</span><span class="p">,[</span><span class="n">ards_nr</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ebx</span><span class="p">,</span><span class="n">ards_buf</span>
+</span></span><span class="line"><span class="cl">	<span class="n">xor</span>	<span class="n">edx</span><span class="p">,</span><span class="n">edx</span>
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">find_max_mem_area</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">eax</span><span class="p">,[</span><span class="n">ebx</span><span class="p">]</span>				<span class="p">;</span><span class="n">base_add_low</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">eax</span><span class="p">,[</span><span class="n">ebx</span><span class="o">+</span><span class="mi">8</span><span class="p">]</span>				<span class="p">;</span><span class="n">length_low</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">ebx</span><span class="p">,</span><span class="mi">20</span>					<span class="p">;</span><span class="n">point</span> <span class="n">to</span> <span class="n">the</span> <span class="n">next</span> <span class="n">ARDS</span>
+</span></span><span class="line"><span class="cl">	<span class="n">cmp</span>	<span class="n">edx</span><span class="p">,</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">jge</span>	<span class="o">.</span><span class="n">next_ards</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">edx</span><span class="p">,</span><span class="n">eax</span>					<span class="p">;</span><span class="n">edx</span> <span class="o">=</span> <span class="n">the</span> <span class="n">all</span> <span class="n">memory</span>
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">next_ards</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">loop</span>	<span class="o">.</span><span class="n">find_max_mem_area</span>
+</span></span><span class="line"><span class="cl">	<span class="n">jmp</span>	<span class="o">.</span><span class="n">mem_get_ok</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="o">-----------------------</span><span class="ne">int</span> <span class="mh">0x15</span> <span class="n">ax</span><span class="o">=</span><span class="mh">0xe801</span><span class="o">---------------------</span>
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">e820_failed_so_try_e801</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ax</span><span class="p">,</span><span class="mh">0xe801</span>
+</span></span><span class="line"><span class="cl">	<span class="ne">int</span>	<span class="mh">0x15</span>
+</span></span><span class="line"><span class="cl">	<span class="n">jc</span>	<span class="o">.</span><span class="n">e801_failed_so_try88</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">calculate</span> <span class="n">the</span> <span class="n">memory</span> <span class="n">capacity</span>
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="mf">1.</span><span class="n">the</span> <span class="n">memory</span> <span class="n">less</span> <span class="n">than</span> <span class="mi">15</span><span class="n">mb</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">cx</span><span class="p">,</span><span class="mh">0x400</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mul</span>	<span class="n">cx</span>
+</span></span><span class="line"><span class="cl">	<span class="n">shl</span>	<span class="n">edx</span><span class="p">,</span><span class="mi">16</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">and</span>	<span class="n">eax</span><span class="p">,</span><span class="mh">0x0000FFFF</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">or</span> 	<span class="n">edx</span><span class="p">,</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">edx</span><span class="p">,</span><span class="mh">0x100000</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">esi</span><span class="p">,</span><span class="n">edx</span>
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="mf">2.</span><span class="n">the</span> <span class="n">memory</span> <span class="n">more</span> <span class="n">than</span> <span class="mi">16</span><span class="n">mb</span>
+</span></span><span class="line"><span class="cl">	<span class="n">xor</span>	<span class="n">eax</span><span class="p">,</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ax</span><span class="p">,</span><span class="n">bx</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ecx</span><span class="p">,</span><span class="mh">0x10000</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mul</span>	<span class="n">ecx</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">esi</span><span class="p">,</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">edx</span><span class="p">,</span><span class="n">esi</span>					<span class="p">;</span><span class="n">edx</span> <span class="o">=</span> <span class="n">the</span> <span class="n">all</span> <span class="n">memory</span>
+</span></span><span class="line"><span class="cl">	<span class="n">jmp</span>	<span class="o">.</span><span class="n">mem_get_ok</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="o">------------------------</span><span class="ne">int</span> <span class="mh">0x15</span> <span class="n">ah</span><span class="o">=</span><span class="mh">0x88</span><span class="o">-------------------------</span>
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">e801_failed_so_try88</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ah</span><span class="p">,</span><span class="mh">0x88</span>
+</span></span><span class="line"><span class="cl">	<span class="ne">int</span>	<span class="mh">0x15</span>
+</span></span><span class="line"><span class="cl">	<span class="n">jc</span>	<span class="o">.</span><span class="n">error_hlt</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">and</span>	<span class="n">eax</span><span class="p">,</span><span class="mh">0x0000FFFF</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">cx</span><span class="p">,</span><span class="mh">0x400</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mul</span>	<span class="n">cx</span>
+</span></span><span class="line"><span class="cl">	<span class="n">shl</span>	<span class="n">edx</span><span class="p">,</span><span class="mi">16</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">or</span>	<span class="n">edx</span><span class="p">,</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">edx</span><span class="p">,</span><span class="mh">0x100000</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">mem_get_ok</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="p">[</span><span class="n">total_mem_bytes</span><span class="p">],</span><span class="n">edx</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">enter</span> <span class="n">to</span> <span class="n">the</span> <span class="n">pretect</span> <span class="n">mode</span>
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="mf">1.</span><span class="n">open</span> <span class="n">the</span> <span class="n">A20</span> <span class="n">address</span> <span class="n">line</span>
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="mf">2.</span><span class="n">load</span> <span class="n">the</span> <span class="n">gdt</span>
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="mf">3.</span><span class="n">set</span> <span class="n">the</span> <span class="n">cr0</span><span class="s1">&#39;s pe to 1</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="ow">in</span>	<span class="n">al</span><span class="p">,</span><span class="mh">0x92</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">or</span>	<span class="n">al</span><span class="p">,</span><span class="mi">0000</span><span class="n">_0010B</span>
+</span></span><span class="line"><span class="cl">	<span class="n">out</span>	<span class="mh">0x92</span><span class="p">,</span><span class="n">al</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">lgdt</span>	<span class="p">[</span><span class="n">gdt_ptr</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">eax</span><span class="p">,</span><span class="n">cr0</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">or</span>	<span class="n">eax</span><span class="p">,</span><span class="mh">0x00000001</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">cr0</span><span class="p">,</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">over</span>
+</span></span><span class="line"><span class="cl">	<span class="n">jmp</span>	<span class="n">dword</span>	<span class="n">SELECTOR_CODE</span><span class="p">:</span><span class="n">p_mode_start</span>
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">error_hlt</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">jmp</span>	<span class="o">$</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">[</span><span class="n">bits</span> <span class="mi">32</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">p_mode_start</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ax</span><span class="p">,</span><span class="n">SELECTOR_DATA</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ds</span><span class="p">,</span><span class="n">ax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">es</span><span class="p">,</span><span class="n">ax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ss</span><span class="p">,</span><span class="n">ax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">esp</span><span class="p">,</span><span class="n">LOADER_STACK_TOP</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ax</span><span class="p">,</span><span class="n">SELECTOR_VIDEO</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">gs</span><span class="p">,</span><span class="n">ax</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mi">160</span><span class="p">],</span> <span class="s1">&#39;P&#39;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="o">--------------------------</span><span class="nb">load</span> <span class="n">kernel</span><span class="o">--------------------------------</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">eax</span><span class="p">,</span><span class="n">KERNEL_START_SECTOR</span>			<span class="p">;</span><span class="n">the</span> <span class="n">sector</span> <span class="n">of</span> <span class="n">kernel</span>	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ebx</span><span class="p">,</span><span class="n">KERNEL_BIN_BASE_ADDR</span>		<span class="p">;</span><span class="n">the</span> <span class="n">target</span> <span class="n">address</span> <span class="n">of</span> <span class="nb">load</span> <span class="n">the</span> <span class="n">kernel</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ecx</span><span class="p">,</span><span class="mi">200</span>					<span class="p">;</span><span class="n">the</span> <span class="n">number</span> <span class="n">of</span> <span class="n">kernel</span><span class="s1">&#39;s sector</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">call</span>	<span class="n">rd_disk_m_32</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="o">------------------------</span><span class="n">turn</span> <span class="n">on</span> <span class="n">the</span> <span class="n">page</span> <span class="n">machanism</span><span class="o">-----------------------------</span>
+</span></span><span class="line"><span class="cl">	<span class="n">call</span>	<span class="n">setup_page</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">sgdt</span>	<span class="p">[</span><span class="n">gdt_ptr</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ebx</span><span class="p">,[</span><span class="n">gdt_ptr</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span>				<span class="p">;</span><span class="n">the</span> <span class="n">video</span> <span class="n">descriptor</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">or</span>	<span class="n">dword</span>	<span class="p">[</span><span class="n">ebx</span><span class="o">+</span><span class="mh">0x18</span><span class="o">+</span><span class="mi">4</span><span class="p">],</span><span class="mh">0xc0000000</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">dword</span> 	<span class="p">[</span><span class="n">gdt_ptr</span><span class="o">+</span><span class="mi">2</span><span class="p">],</span><span class="mh">0xc0000000</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">esp</span><span class="p">,</span><span class="mh">0xc0000000</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">eax</span><span class="p">,</span><span class="n">PAGE_DIR_TABLE_POS</span>			<span class="p">;</span><span class="n">set</span> <span class="n">cr3</span> <span class="o">=</span> <span class="n">the</span> <span class="n">position</span> <span class="n">of</span> <span class="n">page</span> <span class="n">directory</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">cr3</span><span class="p">,</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">eax</span><span class="p">,</span><span class="n">cr0</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">or</span> 	<span class="n">eax</span><span class="p">,</span><span class="mh">0x80000000</span>				<span class="p">;</span><span class="n">set</span> <span class="n">the</span> <span class="n">pg</span> <span class="n">position</span> <span class="n">of</span> <span class="n">cr0</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">cr0</span><span class="p">,</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">lgdt</span> 	<span class="p">[</span><span class="n">gdt_ptr</span><span class="p">]</span>				<span class="p">;</span><span class="n">reload</span> <span class="n">the</span> <span class="n">new</span> <span class="n">gdt</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="o">---------------</span><span class="n">enter</span> <span class="n">kernel</span><span class="o">--------------------------------</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">jmp</span>	<span class="n">SELECTOR_CODE</span><span class="p">:</span><span class="n">enter_kernel</span>		<span class="p">;</span><span class="n">refresh</span> <span class="n">assembly</span> <span class="n">line</span><span class="p">,</span><span class="n">just</span> <span class="ow">in</span> <span class="k">case</span>
+</span></span><span class="line"><span class="cl"><span class="n">enter_kernel</span><span class="p">:</span>	
+</span></span><span class="line"><span class="cl">	<span class="n">call</span>	<span class="n">kernel_init</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">esp</span><span class="p">,</span><span class="mh">0xc009f000</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">gs</span><span class="p">:</span><span class="mi">160</span><span class="p">],</span> <span class="s1">&#39;K&#39;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">jmp</span>	<span class="n">KERNEL_ENTRY_POINT</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="o">---------------</span><span class="n">setup</span> <span class="n">page</span> <span class="o">----------------------------</span>
+</span></span><span class="line"><span class="cl"><span class="n">setup_page</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ecx</span><span class="p">,</span><span class="mi">4096</span>				<span class="p">;</span><span class="n">the</span> <span class="n">size</span> <span class="n">of</span> <span class="n">page</span> <span class="n">directory</span> <span class="n">is</span> <span class="mi">4</span><span class="n">kb</span> <span class="p">,</span> <span class="n">so</span> <span class="n">set</span> <span class="n">the</span> <span class="n">ecx</span><span class="o">=</span> <span class="mi">4096</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">esi</span><span class="p">,</span><span class="mi">0</span>
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">clear</span> <span class="n">the</span> <span class="n">memory</span>
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">clear_page_dir</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">PAGE_DIR_TABLE_POS</span><span class="o">+</span><span class="n">esi</span><span class="p">],</span><span class="mi">0</span>
+</span></span><span class="line"><span class="cl">	<span class="n">inc</span>	<span class="n">esi</span>
+</span></span><span class="line"><span class="cl">	<span class="n">loop</span>	<span class="o">.</span><span class="n">clear_page_dir</span>				
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">create</span> <span class="n">the</span> <span class="n">page</span> <span class="n">directory</span> <span class="n">entry</span>
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">create_pde</span><span class="p">:</span>	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">eax</span><span class="p">,</span><span class="n">PAGE_DIR_TABLE_POS</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add</span> 	<span class="n">eax</span><span class="p">,</span><span class="mh">0x1000</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ebx</span><span class="p">,</span><span class="n">eax</span>					<span class="p">;</span><span class="n">ebx</span> <span class="n">is</span> <span class="n">the</span> <span class="n">base</span> <span class="n">address</span> <span class="n">of</span> <span class="n">pte</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">or</span>	<span class="n">eax</span><span class="p">,</span><span class="n">PG_US_U</span> <span class="o">|</span> <span class="n">PG_RW_W</span> <span class="o">|</span> <span class="n">PG_P</span>		<span class="p">;</span><span class="n">eax</span><span class="o">=</span><span class="mh">0x101111</span> <span class="p">,</span><span class="n">this</span> <span class="n">is</span> <span class="n">position</span> <span class="ow">and</span> <span class="n">attribute</span> <span class="n">of</span> <span class="n">first</span> <span class="n">page</span> <span class="n">table</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="p">[</span><span class="n">PAGE_DIR_TABLE_POS</span> <span class="o">+</span> <span class="mh">0x0</span><span class="p">],</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="p">[</span><span class="n">PAGE_DIR_TABLE_POS</span> <span class="o">+</span> <span class="mh">0xc00</span><span class="p">],</span><span class="n">eax</span>	<span class="p">;</span><span class="mh">0xc00</span> <span class="n">is</span> <span class="n">the</span> <span class="n">boundary</span> <span class="n">between</span> <span class="n">user</span> <span class="n">program</span>  <span class="ow">and</span> <span class="n">operation</span> <span class="n">system</span>
+</span></span><span class="line"><span class="cl">	<span class="n">sub</span>	<span class="n">eax</span><span class="p">,</span><span class="mh">0x1000</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="p">[</span><span class="n">PAGE_DIR_TABLE_POS</span><span class="o">+</span><span class="mi">4092</span><span class="p">],</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">create</span> <span class="n">the</span> <span class="n">page</span> <span class="n">table</span> <span class="n">entry</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ecx</span><span class="p">,</span><span class="mi">256</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">esi</span><span class="p">,</span><span class="mi">0</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">edx</span><span class="p">,</span><span class="n">PG_US_U</span> <span class="o">|</span> <span class="n">PG_RW_W</span> <span class="o">|</span> <span class="n">PG_P</span>		<span class="p">;</span><span class="n">edx</span> <span class="o">=</span> <span class="mh">0x111</span><span class="p">,</span> <span class="n">the</span> <span class="n">attribute</span> <span class="n">is</span> <span class="mi">7</span> <span class="p">,</span> <span class="n">the</span> <span class="n">position</span> <span class="n">is</span> <span class="mi">0</span> 
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">create_pte</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="p">[</span><span class="n">ebx</span><span class="o">+</span><span class="n">esi</span><span class="o">*</span><span class="mi">4</span><span class="p">],</span><span class="n">edx</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">edx</span><span class="p">,</span><span class="mi">4096</span>				<span class="p">;</span><span class="mi">4</span><span class="n">k</span>
+</span></span><span class="line"><span class="cl">	<span class="n">inc</span>	<span class="n">esi</span>
+</span></span><span class="line"><span class="cl">	<span class="n">loop</span>	<span class="o">.</span><span class="n">create_pte</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">create</span> <span class="n">the</span> <span class="n">kernel</span> <span class="n">page</span> <span class="n">directory</span> <span class="n">entry</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">eax</span><span class="p">,</span><span class="n">PAGE_DIR_TABLE_POS</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">eax</span><span class="p">,</span><span class="mh">0x2000</span>				<span class="p">;</span><span class="n">eax</span> <span class="n">is</span> <span class="n">the</span> <span class="n">position</span> <span class="n">of</span> <span class="n">second</span> <span class="n">page</span> <span class="n">table</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">or</span>	<span class="n">eax</span><span class="p">,</span><span class="n">PG_US_U</span> <span class="o">|</span> <span class="n">PG_RW_W</span> <span class="o">|</span> <span class="n">PG_P</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ebx</span><span class="p">,</span><span class="n">PAGE_DIR_TABLE_POS</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ecx</span><span class="p">,</span><span class="mi">254</span>					<span class="p">;</span><span class="n">the</span> <span class="n">number</span> <span class="n">of</span> <span class="n">all</span> <span class="n">pde</span> <span class="n">between</span> <span class="mi">769</span> <span class="o">~</span> <span class="mi">1022</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">esi</span><span class="p">,</span><span class="mi">769</span>
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">create_kernel_pde</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="p">[</span><span class="n">ebx</span><span class="o">+</span><span class="n">esi</span><span class="o">*</span><span class="mi">4</span><span class="p">],</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">inc</span>	<span class="n">esi</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">eax</span><span class="p">,</span><span class="mh">0x1000</span>
+</span></span><span class="line"><span class="cl">	<span class="n">loop</span>	<span class="o">.</span><span class="n">create_kernel_pde</span>
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="o">--------------------</span><span class="n">copy</span> <span class="n">the</span> <span class="n">segment</span> <span class="n">of</span> <span class="n">kernel</span><span class="o">.</span><span class="n">bin</span> <span class="n">to</span> <span class="n">the</span> <span class="n">address</span> <span class="n">of</span> <span class="n">compile</span> <span class="n">kernel</span> <span class="o">-------------</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">kernel_init</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">xor</span>	<span class="n">eax</span><span class="p">,</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">xor</span>	<span class="n">ebx</span><span class="p">,</span><span class="n">ebx</span>					<span class="p">;</span><span class="n">ebx</span><span class="p">:</span><span class="n">record</span> <span class="n">the</span> <span class="n">address</span> <span class="n">of</span> <span class="n">program</span> <span class="n">header</span> <span class="n">table</span><span class="p">(</span><span class="n">e_phoff</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">xor</span>	<span class="n">ecx</span><span class="p">,</span><span class="n">ecx</span>					<span class="p">;</span><span class="n">cx</span><span class="p">:</span><span class="n">record</span> <span class="n">the</span> <span class="n">number</span> <span class="n">of</span> <span class="n">program</span> <span class="n">header</span> <span class="ow">in</span> <span class="n">program</span> <span class="n">header</span> <span class="n">table</span><span class="p">(</span><span class="n">e_phnum</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="n">xor</span>	<span class="n">edx</span><span class="p">,</span><span class="n">edx</span>					<span class="p">;</span><span class="n">dx</span><span class="p">:</span><span class="n">record</span> <span class="n">the</span> <span class="n">size</span> <span class="n">of</span> <span class="n">program</span> <span class="n">header</span><span class="p">(</span><span class="n">e_phentsize</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,[</span><span class="n">KERNEL_BIN_BASE_ADDR</span><span class="o">+</span><span class="mi">42</span><span class="p">]</span>		<span class="p">;</span><span class="mi">42</span> <span class="n">is</span> <span class="n">the</span> <span class="n">e_phentsize</span><span class="s1">&#39;s offset</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ebx</span><span class="p">,[</span><span class="n">KERNEL_BIN_BASE_ADDR</span><span class="o">+</span><span class="mi">28</span><span class="p">]</span>		<span class="p">;</span><span class="mi">28</span> <span class="n">is</span> <span class="n">the</span> <span class="n">e_phoff</span><span class="s1">&#39;s offset. Here is mean the first program header</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">ebx</span><span class="p">,</span><span class="n">KERNEL_BIN_BASE_ADDR</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">cx</span><span class="p">,[</span><span class="n">KERNEL_BIN_BASE_ADDR</span><span class="o">+</span><span class="mi">44</span><span class="p">]</span>		<span class="p">;</span><span class="mi">44</span> <span class="n">is</span> <span class="n">the</span> <span class="n">e_phnum</span><span class="s1">&#39;s offset</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">each_segment</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">cmp</span>	<span class="n">byte</span>	<span class="p">[</span><span class="n">ebx</span><span class="o">+</span><span class="mi">0</span><span class="p">],</span><span class="n">PT_NULL</span>			<span class="p">;</span><span class="n">compare</span> <span class="n">between</span>  <span class="n">p_type</span> <span class="ow">and</span> <span class="n">PT_NULL</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">je</span>	<span class="o">.</span><span class="n">PTNULL</span>					<span class="p">;</span><span class="k">if</span> <span class="o">==</span> <span class="n">is</span> <span class="n">that</span> <span class="n">the</span> <span class="n">program</span> <span class="n">header</span> <span class="n">isn</span><span class="s1">&#39;t use, so jump</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">push</span> <span class="n">the</span> <span class="n">params</span> <span class="k">for</span> <span class="n">function</span> <span class="n">memcpy</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">first</span> <span class="n">param</span><span class="p">:</span><span class="n">size</span>
+</span></span><span class="line"><span class="cl">	<span class="n">push</span>	<span class="n">dword</span>	<span class="p">[</span><span class="n">ebx</span><span class="o">+</span><span class="mi">16</span><span class="p">]</span>			<span class="p">;</span><span class="mi">16</span> <span class="n">is</span> <span class="n">the</span> <span class="n">p_filesz</span><span class="s1">&#39;s offset</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">scond</span> <span class="n">param</span><span class="p">:</span><span class="n">source</span> <span class="n">address</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">eax</span><span class="p">,[</span><span class="n">ebx</span><span class="o">+</span><span class="mi">4</span><span class="p">]</span>				<span class="p">;</span><span class="mi">4</span> <span class="n">is</span> <span class="n">the</span> <span class="n">p_offset</span><span class="s1">&#39;s offset</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add</span> 	<span class="n">eax</span><span class="p">,</span><span class="n">KERNEL_BIN_BASE_ADDR</span>		<span class="p">;</span><span class="n">add</span> <span class="n">the</span> <span class="n">kernel</span><span class="o">.</span><span class="n">bin</span><span class="s1">&#39;s load address.</span>
+</span></span><span class="line"><span class="cl">	<span class="n">push</span> 	<span class="n">eax</span>					<span class="p">;</span><span class="n">Now</span> <span class="n">the</span> <span class="n">eax</span> <span class="n">is</span> <span class="n">the</span> <span class="n">physic</span> <span class="n">memory</span> <span class="n">of</span> <span class="n">this</span> <span class="n">section</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">third</span> <span class="n">param</span><span class="p">;</span><span class="n">target</span> <span class="n">address</span>
+</span></span><span class="line"><span class="cl">	<span class="n">push</span>	<span class="n">dword</span>	<span class="p">[</span><span class="n">ebx</span><span class="o">+</span><span class="mi">8</span><span class="p">]</span>				<span class="p">;</span><span class="mi">8</span> <span class="n">is</span> <span class="n">the</span> <span class="n">p_vaddr</span><span class="s1">&#39;s offset</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">call</span> 	<span class="n">mem_cpy</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">esp</span><span class="p">,</span><span class="mi">12</span>					<span class="p">;</span><span class="n">clear</span> <span class="n">the</span> <span class="n">three</span> <span class="n">params</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">stack</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">PTNULL</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">ebx</span><span class="p">,</span><span class="n">edx</span>					<span class="p">;</span><span class="n">edx</span> <span class="n">is</span> <span class="n">the</span> <span class="n">size</span> <span class="n">of</span> <span class="n">program</span> <span class="n">header</span> <span class="o">.</span><span class="n">So</span> <span class="n">here</span> <span class="n">is</span> <span class="n">make</span> <span class="n">the</span> <span class="n">ebx</span> <span class="n">point</span> <span class="n">to</span> <span class="n">the</span> <span class="n">next</span> <span class="n">program</span> <span class="n">header</span>
+</span></span><span class="line"><span class="cl">	<span class="n">loop</span>	<span class="o">.</span><span class="n">each_segment</span>
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="o">-------------------------</span><span class="n">mem_cpy</span><span class="p">(</span><span class="n">dst</span><span class="p">,</span><span class="n">src</span><span class="p">,</span><span class="n">size</span><span class="p">)</span><span class="o">---------------------------</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">;</span>			<span class="p">(</span><span class="n">byte</span> <span class="n">by</span> <span class="n">byte</span> <span class="n">copy</span><span class="p">)</span>				  <span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="o">-------------------------------------------------------------------------</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">mem_cpy</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">save</span> <span class="n">the</span> <span class="n">environment</span>
+</span></span><span class="line"><span class="cl">	<span class="n">cld</span>
+</span></span><span class="line"><span class="cl">	<span class="n">push</span>	<span class="n">ebp</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ebp</span><span class="p">,</span><span class="n">esp</span>
+</span></span><span class="line"><span class="cl">	<span class="n">push</span>	<span class="n">ecx</span>					
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">edi</span><span class="p">,[</span><span class="n">ebp</span><span class="o">+</span><span class="mi">8</span><span class="p">]</span>				<span class="p">;</span><span class="n">dst</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">esi</span><span class="p">,[</span><span class="n">ebp</span><span class="o">+</span><span class="mi">12</span><span class="p">]</span>				<span class="p">;</span><span class="n">src</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ecx</span><span class="p">,[</span><span class="n">ebp</span><span class="o">+</span><span class="mi">16</span><span class="p">]</span>				<span class="p">;</span><span class="n">size</span>
+</span></span><span class="line"><span class="cl">	<span class="n">rep</span>	<span class="n">movsb</span>					<span class="p">;</span><span class="n">byte</span> <span class="n">by</span> <span class="n">byte</span> <span class="n">copy</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">recovery</span> <span class="n">the</span> <span class="n">environment</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">pop</span>	<span class="n">ecx</span>
+</span></span><span class="line"><span class="cl">	<span class="n">pop</span>	<span class="n">ebp</span>
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span>
+</span></span><span class="line"><span class="cl">			
+</span></span><span class="line"><span class="cl"><span class="n">rd_disk_m_32</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">copy</span> <span class="n">the</span> <span class="n">value</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">esi</span><span class="p">,</span><span class="n">eax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">edi</span><span class="p">,</span><span class="n">ecx</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">al</span><span class="p">,</span><span class="n">cl</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mh">0x1F2</span>
+</span></span><span class="line"><span class="cl">	<span class="n">out</span>	<span class="n">dx</span><span class="p">,</span><span class="n">al</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">eax</span><span class="p">,</span><span class="n">esi</span>				<span class="p">;</span><span class="n">recover</span> <span class="n">the</span> <span class="n">value</span> <span class="n">of</span> <span class="n">ax</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mh">0x1F3</span>
+</span></span><span class="line"><span class="cl">	<span class="n">out</span>	<span class="n">dx</span><span class="p">,</span><span class="n">al</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">cl</span><span class="p">,</span><span class="mh">0x8</span>
+</span></span><span class="line"><span class="cl">	<span class="n">shr</span>	<span class="n">eax</span><span class="p">,</span><span class="n">cl</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mh">0x1F4</span>
+</span></span><span class="line"><span class="cl">	<span class="n">out</span>	<span class="n">dx</span><span class="p">,</span><span class="n">al</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">shr</span>	<span class="n">eax</span><span class="p">,</span><span class="n">cl</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mh">0x1F5</span>
+</span></span><span class="line"><span class="cl">	<span class="n">out</span>	<span class="n">dx</span><span class="p">,</span><span class="n">al</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">shr</span>	<span class="n">eax</span><span class="p">,</span><span class="n">cl</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">and</span>	<span class="n">al</span><span class="p">,</span><span class="mh">0x0f</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">or</span> 	<span class="n">al</span><span class="p">,</span><span class="mh">0xe0</span>			<span class="p">;</span><span class="mi">11100000</span> <span class="o">=</span> <span class="mh">0xe0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mh">0x1F6</span>
+</span></span><span class="line"><span class="cl">	<span class="n">out</span>	<span class="n">dx</span><span class="p">,</span><span class="n">al</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ax</span><span class="p">,</span><span class="mh">0x20</span>		
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mh">0x1F7</span>
+</span></span><span class="line"><span class="cl">	<span class="n">out</span>	<span class="n">dx</span><span class="p">,</span><span class="n">al</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">   <span class="o">.</span><span class="n">not_ready</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="n">nop</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">in</span>	<span class="n">al</span><span class="p">,</span><span class="n">dx</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">and</span>	<span class="n">al</span><span class="p">,</span><span class="mh">0x88</span>
+</span></span><span class="line"><span class="cl">	<span class="n">cmp</span>	<span class="n">al</span><span class="p">,</span><span class="mh">0x08</span>
+</span></span><span class="line"><span class="cl">	<span class="n">jnz</span>	<span class="o">.</span><span class="n">not_ready</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">begine</span> <span class="n">to</span> <span class="n">loop</span> <span class="n">read</span>
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">set</span> <span class="n">the</span> <span class="n">source</span> 
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">ax</span><span class="p">,</span><span class="n">di</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mi">256</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mul</span>	<span class="n">dx</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">cx</span><span class="p">,</span><span class="n">ax</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="n">dx</span><span class="p">,</span><span class="mh">0x1F0</span>
+</span></span><span class="line"><span class="cl"><span class="o">.</span><span class="n">loop_read_data</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">	<span class="ow">in</span>	<span class="n">ax</span><span class="p">,</span><span class="n">dx</span>
+</span></span><span class="line"><span class="cl">	<span class="n">mov</span>	<span class="p">[</span><span class="n">ebx</span><span class="p">],</span><span class="n">ax</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="n">add</span>	<span class="n">ebx</span><span class="p">,</span><span class="mi">2</span>
+</span></span><span class="line"><span class="cl">	<span class="n">loop</span>	<span class="o">.</span><span class="n">loop_read_data</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="p">;</span><span class="n">read</span> <span class="n">over</span>
+</span></span><span class="line"><span class="cl">	<span class="n">ret</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>include/boot.inc</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="p">;</span><span class="o">--------------------</span><span class="n">loader</span> <span class="ow">and</span> <span class="n">kernel</span> <span class="o">-----------------</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">LOADER_BASE_ADDR</span> <span class="n">equ</span> <span class="mh">0x900</span>
+</span></span><span class="line"><span class="cl"><span class="n">LOADER_START_SECTOR</span> <span class="n">equ</span> <span class="mh">0x2</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">PAGE_DIR_TABLE_POS</span>	<span class="n">equ</span>	<span class="mh">0x100000</span>			<span class="p">;</span><span class="n">the</span> <span class="n">position</span> <span class="n">of</span> <span class="n">page</span> <span class="n">directory</span> <span class="n">table</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="o">--------------------</span><span class="n">gdt</span><span class="p">:</span><span class="n">the</span> <span class="n">attribute</span> <span class="n">of</span> <span class="n">descriptor</span><span class="o">----</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">DESC_G_4K</span>	<span class="n">equ</span>	<span class="mi">1</span><span class="n">_00000000000000000000000b</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_D_32</span>	<span class="n">equ</span>	<span class="mi">1</span><span class="n">_0000000000000000000000b</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_L</span>		<span class="n">equ</span>	<span class="mi">0</span><span class="n">_000000000000000000000b</span>		<span class="p">;</span><span class="n">L</span> <span class="p">:</span> <span class="n">set</span> <span class="n">to</span> <span class="n">the</span> <span class="mi">64</span> <span class="n">bit</span> <span class="n">code</span> <span class="n">snippet</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_AVL</span>	<span class="n">equ</span>	<span class="mi">0</span><span class="n">_00000000000000000000b</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_LIMIT_CODE2</span> <span class="n">equ</span> 	<span class="mi">1111</span><span class="n">_0000000000000000b</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_LIMIT_DATA2</span> <span class="n">equ</span>	<span class="n">DESC_LIMIT_CODE2</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_LIMIT_VIDEO2</span> <span class="n">equ</span>	<span class="mi">0000</span><span class="n">_0000000000000000b</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_P</span>		<span class="n">equ</span>	<span class="mi">1</span><span class="n">_000000000000000b</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_DPL_0</span>	<span class="n">equ</span>	<span class="mi">00</span><span class="n">_0000000000000b</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_DPL_1</span>	<span class="n">equ</span>	<span class="mi">01</span><span class="n">_0000000000000b</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_DPL_2</span>	<span class="n">equ</span>	<span class="mi">10</span><span class="n">_0000000000000b</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_DPL_3</span>	<span class="n">equ</span>	<span class="mi">11</span><span class="n">_0000000000000b</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_S_CODE</span>	<span class="n">equ</span>	<span class="mi">1</span><span class="n">_000000000000b</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_S_DATA</span>	<span class="n">equ</span>	<span class="n">DESC_S_CODE</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_S_sys</span>	<span class="n">equ</span>	<span class="mi">0</span><span class="n">_000000000000b</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_TYPE_CODE</span>	<span class="n">equ</span>	<span class="mi">1000</span><span class="n">_00000000b</span>				<span class="p">;</span><span class="n">code</span> <span class="n">segment</span><span class="p">:</span><span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">r</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">a</span><span class="o">=</span><span class="mi">0</span>
+</span></span><span class="line"><span class="cl"><span class="n">DESC_TYPE_DATA</span>	<span class="n">equ</span>	<span class="mi">0010</span><span class="n">_00000000b</span>				<span class="p">;</span><span class="n">data</span> <span class="n">segment</span><span class="p">:</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">e</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">w</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">a</span><span class="o">=</span><span class="mi">0</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">DESC_CODE_HIGH4</span>	<span class="n">equ</span>	<span class="p">(</span><span class="mh">0x00</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span><span class="p">)</span> <span class="o">+</span> <span class="n">DESC_G_4K</span> <span class="o">+</span> <span class="n">DESC_D_32</span> <span class="o">+</span> \
+</span></span><span class="line"><span class="cl"><span class="n">DESC_L</span> <span class="o">+</span> <span class="n">DESC_AVL</span> <span class="o">+</span> <span class="n">DESC_LIMIT_CODE2</span> <span class="o">+</span> \
+</span></span><span class="line"><span class="cl"><span class="n">DESC_P</span> <span class="o">+</span> <span class="n">DESC_DPL_0</span> <span class="o">+</span> <span class="n">DESC_S_CODE</span> <span class="o">+</span> \
+</span></span><span class="line"><span class="cl"><span class="n">DESC_TYPE_CODE</span> <span class="o">+</span> <span class="mh">0x00</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">DESC_DATA_HIGH4</span> <span class="n">equ</span>	<span class="p">(</span><span class="mh">0x00</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span><span class="p">)</span> <span class="o">+</span> <span class="n">DESC_G_4K</span> <span class="o">+</span> <span class="n">DESC_D_32</span> <span class="o">+</span>\
+</span></span><span class="line"><span class="cl"><span class="n">DESC_L</span> <span class="o">+</span> <span class="n">DESC_AVL</span> <span class="o">+</span> <span class="n">DESC_LIMIT_DATA2</span> <span class="o">+</span>\
+</span></span><span class="line"><span class="cl"><span class="n">DESC_P</span> <span class="o">+</span> <span class="n">DESC_DPL_0</span> <span class="o">+</span> <span class="n">DESC_S_DATA</span> <span class="o">+</span> \
+</span></span><span class="line"><span class="cl"><span class="n">DESC_TYPE_DATA</span><span class="o">+</span> <span class="mh">0x00</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">DESC_VIDEO_HIGH4</span> <span class="n">equ</span>	<span class="p">(</span><span class="mh">0x00</span> <span class="o">&lt;&lt;</span> <span class="mi">24</span><span class="p">)</span> <span class="o">+</span> <span class="n">DESC_G_4K</span> <span class="o">+</span> <span class="n">DESC_D_32</span> <span class="o">+</span>\
+</span></span><span class="line"><span class="cl"><span class="n">DESC_L</span> <span class="o">+</span> <span class="n">DESC_AVL</span> <span class="o">+</span> <span class="n">DESC_LIMIT_VIDEO2</span> <span class="o">+</span>\
+</span></span><span class="line"><span class="cl"><span class="n">DESC_P</span> <span class="o">+</span> <span class="n">DESC_DPL_0</span> <span class="o">+</span> <span class="n">DESC_S_DATA</span> <span class="o">+</span> \
+</span></span><span class="line"><span class="cl"><span class="n">DESC_TYPE_DATA</span><span class="o">+</span> <span class="mh">0x0B</span>						<span class="p">;</span><span class="n">the</span> <span class="n">begining</span> <span class="n">of</span> <span class="n">graphics</span> <span class="n">memory</span> <span class="n">is</span> <span class="mh">0xb8000</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="o">----------------------</span><span class="n">selector</span><span class="p">:</span> <span class="n">the</span> <span class="n">attribute</span> <span class="n">of</span> <span class="n">selector</span><span class="o">-------</span>
+</span></span><span class="line"><span class="cl"><span class="n">RPL0</span>	<span class="n">equ</span>	<span class="mi">00</span><span class="n">b</span>
+</span></span><span class="line"><span class="cl"><span class="n">RPL1</span>	<span class="n">equ</span>	<span class="mi">01</span><span class="n">b</span>
+</span></span><span class="line"><span class="cl"><span class="n">RPL2</span>	<span class="n">equ</span>	<span class="mi">10</span><span class="n">b</span>
+</span></span><span class="line"><span class="cl"><span class="n">RPL3</span>	<span class="n">equ</span>	<span class="mi">11</span><span class="n">b</span>
+</span></span><span class="line"><span class="cl"><span class="n">TI_GDT</span>	<span class="n">equ</span>	<span class="mi">000</span><span class="n">b</span>
+</span></span><span class="line"><span class="cl"><span class="n">TI_LDT</span>	<span class="n">equ</span>	<span class="mi">100</span><span class="n">b</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="o">---------------------</span><span class="n">page</span> <span class="n">table</span> <span class="p">:</span> <span class="n">the</span> <span class="n">attribute</span> <span class="n">of</span> <span class="n">page</span> <span class="n">table</span> <span class="o">-------------</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">PG_P</span>	<span class="n">equ</span>	<span class="mi">1</span><span class="n">b</span>
+</span></span><span class="line"><span class="cl"><span class="n">PG_RW_R</span>	<span class="n">equ</span>	<span class="mi">00</span><span class="n">b</span>
+</span></span><span class="line"><span class="cl"><span class="n">PG_RW_W</span>	<span class="n">equ</span>	<span class="mi">10</span><span class="n">b</span>
+</span></span><span class="line"><span class="cl"><span class="n">PG_US_S</span>	<span class="n">equ</span>	<span class="mi">000</span><span class="n">b</span>
+</span></span><span class="line"><span class="cl"><span class="n">PG_US_U</span>	<span class="n">equ</span>	<span class="mi">100</span><span class="n">b</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">;</span><span class="o">----------------------</span><span class="n">kernel</span> <span class="o">------------------------------------</span>
+</span></span><span class="line"><span class="cl"><span class="n">KERNEL_START_SECTOR</span>	<span class="n">equ</span>	<span class="mh">0x9</span>
+</span></span><span class="line"><span class="cl"><span class="n">KERNEL_BIN_BASE_ADDR</span>	<span class="n">equ</span>	<span class="mh">0x70000</span>
+</span></span><span class="line"><span class="cl"><span class="n">KERNEL_ENTRY_POINT</span>	<span class="n">equ</span>	<span class="mh">0xc0001500</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">PT_NULL</span>	<span class="n">equ</span>	<span class="mh">0x0</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="4总结">4.总结</h3>
+<p>迈入内核，以后再来梳理bootloader全流程^_^</p></div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2024-05-28</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8Bbootloader/index.md" target="_blank">Read Markdown</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8Bbootloader/" data-title="手写OS系列之bootloader" data-hashtags="项目"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8Bbootloader/" data-hashtag="项目"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8Bbootloader/" data-title="手写OS系列之bootloader"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8Bbootloader/" data-title="手写OS系列之bootloader"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8Bbootloader/" data-title="手写OS系列之bootloader"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E9%A1%B9%E7%9B%AE/">项目</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/hit_os_lab8/" class="prev" rel="prev" title="Hit_os_lab8"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Hit_os_lab8</a></div>
+</div>
+<div id="comments"><div id="valine" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://valine.js.org/">Valine</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.120.4">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2023 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">lance</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/valine/valine.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/valine@1.5.0/dist/Valine.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/algoliasearch@4.13.1/dist/algoliasearch-lite.umd.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typeit@8.6.0/dist/index.umd.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"valine":{"appId":"QGzwQXOqs5JOhN4RGPOkR2mR-MdYXbMMI","appKey":"WBmoGyJtbqUswvfLh6L8iEBr","avatar":"mp","el":"#valine","emojiCDN":"https://cdn.jsdelivr.net/npm/emoji-datasource-google@14.0.0/img/google/64/","emojiMaps":{"100":"1f4af.png","alien":"1f47d.png","anger":"1f4a2.png","angry":"1f620.png","anguished":"1f627.png","astonished":"1f632.png","black_heart":"1f5a4.png","blue_heart":"1f499.png","blush":"1f60a.png","bomb":"1f4a3.png","boom":"1f4a5.png","broken_heart":"1f494.png","brown_heart":"1f90e.png","clown_face":"1f921.png","cold_face":"1f976.png","cold_sweat":"1f630.png","confounded":"1f616.png","confused":"1f615.png","cry":"1f622.png","crying_cat_face":"1f63f.png","cupid":"1f498.png","dash":"1f4a8.png","disappointed":"1f61e.png","disappointed_relieved":"1f625.png","dizzy":"1f4ab.png","dizzy_face":"1f635.png","drooling_face":"1f924.png","exploding_head":"1f92f.png","expressionless":"1f611.png","face_vomiting":"1f92e.png","face_with_cowboy_hat":"1f920.png","face_with_hand_over_mouth":"1f92d.png","face_with_head_bandage":"1f915.png","face_with_monocle":"1f9d0.png","face_with_raised_eyebrow":"1f928.png","face_with_rolling_eyes":"1f644.png","face_with_symbols_on_mouth":"1f92c.png","face_with_thermometer":"1f912.png","fearful":"1f628.png","flushed":"1f633.png","frowning":"1f626.png","ghost":"1f47b.png","gift_heart":"1f49d.png","green_heart":"1f49a.png","grimacing":"1f62c.png","grin":"1f601.png","grinning":"1f600.png","hankey":"1f4a9.png","hear_no_evil":"1f649.png","heart":"2764-fe0f.png","heart_decoration":"1f49f.png","heart_eyes":"1f60d.png","heart_eyes_cat":"1f63b.png","heartbeat":"1f493.png","heartpulse":"1f497.png","heavy_heart_exclamation_mark_ornament":"2763-fe0f.png","hole":"1f573-fe0f.png","hot_face":"1f975.png","hugging_face":"1f917.png","hushed":"1f62f.png","imp":"1f47f.png","innocent":"1f607.png","japanese_goblin":"1f47a.png","japanese_ogre":"1f479.png","joy":"1f602.png","joy_cat":"1f639.png","kiss":"1f48b.png","kissing":"1f617.png","kissing_cat":"1f63d.png","kissing_closed_eyes":"1f61a.png","kissing_heart":"1f618.png","kissing_smiling_eyes":"1f619.png","laughing":"1f606.png","left_speech_bubble":"1f5e8-fe0f.png","love_letter":"1f48c.png","lying_face":"1f925.png","mask":"1f637.png","money_mouth_face":"1f911.png","nauseated_face":"1f922.png","nerd_face":"1f913.png","neutral_face":"1f610.png","no_mouth":"1f636.png","open_mouth":"1f62e.png","orange_heart":"1f9e1.png","partying_face":"1f973.png","pensive":"1f614.png","persevere":"1f623.png","pleading_face":"1f97a.png","pouting_cat":"1f63e.png","purple_heart":"1f49c.png","rage":"1f621.png","relaxed":"263a-fe0f.png","relieved":"1f60c.png","revolving_hearts":"1f49e.png","right_anger_bubble":"1f5ef-fe0f.png","robot_face":"1f916.png","rolling_on_the_floor_laughing":"1f923.png","scream":"1f631.png","scream_cat":"1f640.png","see_no_evil":"1f648.png","shushing_face":"1f92b.png","skull":"1f480.png","skull_and_crossbones":"2620-fe0f.png","sleeping":"1f634.png","sleepy":"1f62a.png","slightly_frowning_face":"1f641.png","slightly_smiling_face":"1f642.png","smile":"1f604.png","smile_cat":"1f638.png","smiley":"1f603.png","smiley_cat":"1f63a.png","smiling_face_with_3_hearts":"1f970.png","smiling_imp":"1f608.png","smirk":"1f60f.png","smirk_cat":"1f63c.png","sneezing_face":"1f927.png","sob":"1f62d.png","space_invader":"1f47e.png","sparkling_heart":"1f496.png","speak_no_evil":"1f64a.png","speech_balloon":"1f4ac.png","star-struck":"1f929.png","stuck_out_tongue":"1f61b.png","stuck_out_tongue_closed_eyes":"1f61d.png","stuck_out_tongue_winking_eye":"1f61c.png","sunglasses":"1f60e.png","sweat":"1f613.png","sweat_drops":"1f4a6.png","sweat_smile":"1f605.png","thinking_face":"1f914.png","thought_balloon":"1f4ad.png","tired_face":"1f62b.png","triumph":"1f624.png","two_hearts":"1f495.png","unamused":"1f612.png","upside_down_face":"1f643.png","weary":"1f629.png","white_frowning_face":"2639-fe0f.png","white_heart":"1f90d.png","wink":"1f609.png","woozy_face":"1f974.png","worried":"1f61f.png","yawning_face":"1f971.png","yellow_heart":"1f49b.png","yum":"1f60b.png","zany_face":"1f92a.png","zipper_mouth_face":"1f910.png","zzz":"1f4a4.png"},"enableQQ":false,"highlight":true,"lang":"en","pageSize":10,"placeholder":"Your comment ...","recordIP":true,"serverURLs":"https://leancloud.hugoloveit.com","visitor":true}},"data":{"id-1":"lance's blog","id-2":"lance's blog"},"search":{"algoliaAppID":"PASDMWALPK","algoliaIndex":"index.en","algoliaSearchKey":"b42948e51daaa93df92381c8e2ac0f93","highlightTag":"em","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"algolia"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
