@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>手写OS系列之内存管理 - share knowledge</title><meta name="Description" content="内存管理系统"><meta property="og:title" content="手写OS系列之内存管理" />
+<meta property="og:description" content="内存管理系统" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" /><meta property="og:image" content="https://lance-e.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-06-06T17:59:25+08:00" />
+<meta property="article:modified_time" content="2024-06-06T17:59:25+08:00" /><meta property="og:site_name" content="lance&#39;s blog" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://lance-e.github.io/logo.png"/>
+
+<meta name="twitter:title" content="手写OS系列之内存管理"/>
+<meta name="twitter:description" content="内存管理系统"/>
+<meta name="application-name" content="lance&#39;s blog">
+<meta name="apple-mobile-web-app-title" content="lance&#39;s blog"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" /><link rel="prev" href="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E4%B8%AD%E6%96%AD/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "手写OS系列之内存管理",
+        "inLanguage": "en",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/lance-e.github.io\/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86\/"
+        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "项目","wordcount":  1594 ,
+        "url": "https:\/\/lance-e.github.io\/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86\/","datePublished": "2024-06-06T17:59:25+08:00","dateModified": "2024-06-06T17:59:25+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
+            "@type": "Organization",
+            "name": "lance","logo": "https:\/\/avatars.githubusercontent.com\/u\/139835134?s=400\u0026u=821ed61ec1049b862844e4b578ccbc46f274d65d\u0026v=4"},"author": {
+                "@type": "Person",
+                "name": "lance"
+            },"description": "内存管理系统"
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="share knowledge"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw' aria-hidden='true'></i></span><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/categories/documentation/"> Docs </a><a class="menu-item" href="/about/"> About </a><a class="menu-item" href="https://github.com/dillonzq/LoveIt" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a><a href="javascript:void(0);" class="menu-item language" title="Select Language">
+                    <i class="fa fa-globe" aria-hidden="true"></i>                      
+                    <select class="language-select" id="language-select-desktop" onchange="location = this.value;"><option value="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" selected>English</option></select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="share knowledge"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw' aria-hidden='true'></i></span><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/categories/documentation/" title="">Docs</a><a class="menu-item" href="/about/" title="">About</a><a class="menu-item" href="https://github.com/dillonzq/LoveIt" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a><a href="javascript:void(0);" class="menu-item" title="Select Language">
+                    <i class="fa fa-globe fa-fw" aria-hidden="true"></i>
+                    <select class="language-select" onchange="location = this.value;"><option value="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" selected>English</option></select>
+                </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">手写OS系列之内存管理</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>lance</a></span>&nbsp;<span class="post-category">included in <a href="/categories/os/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>os</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-06-06">2024-06-06</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1594 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;8 minutes&nbsp;<span id="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" class="leancloud_visitors" data-flag-title="手写OS系列之内存管理">
+                        <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;views
+                    </span>&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1实现位图">1实现位图</a>
+          <ul>
+            <li>
+              <ul>
+                <li><a href="#1-libkernelbitmaph">1. lib/kernel/bitmap.h:</a></li>
+                <li><a href="#2libkernelbitmapc">2.lib/kernel/bitmap.c:</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li><a href="#2内存管理系统">2.内存管理系统</a>
+          <ul>
+            <li><a href="#1内存池规划">1.内存池规划：</a>
+              <ul>
+                <li><a href="#a物理内存池规划">a.物理内存池规划：</a></li>
+                <li><a href="#b虚拟内存池规划">b.虚拟内存池规划：</a></li>
+              </ul>
+            </li>
+            <li><a href="#2位图的位置">2.位图的位置：</a></li>
+            <li><a href="#3初始化物理内存池">3.初始化物理内存池：</a></li>
+            <li><a href="#4分配页内存重头戏_">4.分配页内存(重头戏&gt;_&lt;)：</a>
+              <ul>
+                <li><a href="#1内存池标记以及页表项或页目录项属性">1.内存池标记以及页表项或页目录项属性：</a></li>
+                <li><a href="#1获取pde和pte的索引">1.获取pde和pte的索引：</a></li>
+                <li><a href="#2申请虚拟内存">2.申请虚拟内存：</a></li>
+                <li><a href="#3获取指定虚拟内存的页目录项和页表项的地址">3.获取指定虚拟内存的页目录项和页表项的地址：</a>
+                  <ul>
+                    <li><a href="#获取pde指针">获取pde指针：</a></li>
+                  </ul>
+                </li>
+                <li><a href="#4申请物理页">4.申请物理页：</a></li>
+                <li><a href="#5虚拟地址和物理地址的映射">5.虚拟地址和物理地址的映射：</a></li>
+                <li><a href="#6分配指定个页空间">6.分配指定个页空间</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li><a href="#3总结">3.总结</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h1 id="手写os系列之内存管理">手写OS系列之内存管理</h1>
+<h3 id="1实现位图">1实现位图</h3>
+<p>​	位图，bitmap，用于管理资源。就是使用字节中的位来映射其他单位大小的资源，一一对应的关系。</p>
+<h5 id="1-libkernelbitmaph">1. lib/kernel/bitmap.h:</h5>
+<p>​	头文件定义了位图的结构，包含一个位图的字节长度和字节指针</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#ifndef __LIB_KERNEL_BITMAP_H
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define __LIB_KERNEL_BITMAP_H
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;global.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define BITMAP_MASK 1 
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span><span class="k">struct</span> <span class="n">bitmap</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">btmp_bytes_len</span><span class="p">;</span>				<span class="c1">// the number of byte in this bitmap
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">uint8_t</span><span class="o">*</span> <span class="n">bits</span><span class="p">;</span>						<span class="c1">// the pointer of bitmap(unit is byte)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">bitmap_init</span><span class="p">(</span><span class="k">struct</span> <span class="n">bitmap</span><span class="o">*</span> <span class="n">btmp</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kt">bool</span> <span class="nf">bitmap_scan_test</span><span class="p">(</span><span class="k">struct</span> <span class="n">bitmap</span><span class="o">*</span> <span class="n">btmp</span> <span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">bit_idx</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">bitmap_scan</span><span class="p">(</span><span class="k">struct</span> <span class="n">bitmap</span><span class="o">*</span> <span class="n">btmp</span> <span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">cnt</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">bitmap_set</span><span class="p">(</span><span class="k">struct</span> <span class="n">bitmap</span><span class="o">*</span> <span class="n">btmp</span> <span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">bit_idx</span><span class="p">,</span> <span class="kt">int8_t</span> <span class="n">value</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#endif
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="2libkernelbitmapc">2.lib/kernel/bitmap.c:</h5>
+<ul>
+<li>bitmap_init：初始化位图，使用memset将bitmap的所有字节置0(未使用)</li>
+<li>bitmap_scan_test：判断该位是否使用，使用return1，未使用return0</li>
+<li>bitmap_scan：<strong>连续</strong>申请cnt个位，申请成功返回起始bit下标，失败返回-1</li>
+<li>bitmap_set：将指定位设置为指定值(1或0)</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;bitmap.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;stdint.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;string.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;print.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;interrupt.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&#34;debug.h&#34;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="c1">// initial bitmap
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">bitmap_init</span><span class="p">(</span><span class="k">struct</span> <span class="n">bitmap</span><span class="o">*</span> <span class="n">btmp</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">memset</span><span class="p">(</span><span class="n">btmp</span><span class="o">-&gt;</span><span class="n">bits</span><span class="p">,</span> <span class="mi">0</span> <span class="p">,</span> <span class="n">btmp</span><span class="o">-&gt;</span><span class="n">btmp_bytes_len</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// judge the index in bitmap is it equal to 1 ,if == 1 return true; else return false
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">bool</span> <span class="nf">bitmap_scan_test</span><span class="p">(</span><span class="k">struct</span> <span class="n">bitmap</span><span class="o">*</span> <span class="n">btmp</span> <span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">bit_idx</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// index /8  to index the array 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">uint32_t</span> <span class="n">byte_idx</span> <span class="o">=</span> <span class="n">bit_idx</span> <span class="o">/</span>  <span class="mi">8</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// index %8 to index the bit in the array
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">uint32_t</span> <span class="n">bit_odd</span> <span class="o">=</span> <span class="n">bit_idx</span>  <span class="o">%</span> <span class="mi">8</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">btmp</span><span class="o">-&gt;</span><span class="n">bits</span><span class="p">[</span><span class="n">byte_idx</span><span class="p">]</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">BITMAP_MASK</span> <span class="o">&lt;&lt;</span> <span class="n">bit_odd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//apply for  &#39;cnt&#39; bit  in bitmap ,if success return the index of begin bit ,else return -1 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">bitmap_scan</span><span class="p">(</span><span class="k">struct</span> <span class="n">bitmap</span><span class="o">*</span> <span class="n">btmp</span> <span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">cnt</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// get the index of byte 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">uint32_t</span> <span class="n">idx_byte</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">while</span> <span class="p">((</span><span class="mh">0xff</span> <span class="o">==</span> <span class="n">btmp</span><span class="o">-&gt;</span><span class="n">bits</span><span class="p">[</span><span class="n">idx_byte</span><span class="p">])</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">idx_byte</span> <span class="o">&lt;</span> <span class="n">btmp</span><span class="o">-&gt;</span><span class="n">btmp_bytes_len</span><span class="p">)){</span>
+</span></span><span class="line"><span class="cl">		<span class="n">idx_byte</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">ASSERT</span><span class="p">(</span><span class="n">idx_byte</span> <span class="o">&lt;</span> <span class="n">btmp</span><span class="o">-&gt;</span><span class="n">btmp_bytes_len</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">idx_byte</span> <span class="o">==</span> <span class="n">btmp</span><span class="o">-&gt;</span><span class="n">btmp_bytes_len</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">//get the index of bit
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">int</span> <span class="n">idx_bit</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">while</span> <span class="p">((</span><span class="kt">uint8_t</span><span class="p">)(</span><span class="n">BITMAP_MASK</span> <span class="o">&lt;&lt;</span> <span class="n">idx_bit</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">btmp</span><span class="o">-&gt;</span><span class="n">bits</span><span class="p">[</span><span class="n">idx_byte</span><span class="p">]){</span>
+</span></span><span class="line"><span class="cl">		<span class="n">idx_bit</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// start of conserve bit
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">int</span> <span class="n">bit_idx_start</span> <span class="o">=</span> <span class="n">idx_byte</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">+</span> <span class="n">idx_bit</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">==</span> <span class="mi">1</span> <span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="n">bit_idx_start</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">//remaining bit
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">uint32_t</span> <span class="n">bit_left</span> <span class="o">=</span> <span class="p">(</span><span class="n">btmp</span><span class="o">-&gt;</span><span class="n">btmp_bytes_len</span> <span class="o">*</span> <span class="mi">8</span> <span class="o">-</span> <span class="n">bit_idx_start</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//current bit is remain,so count + 1 , and point to next
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">uint32_t</span> <span class="n">bit_next</span> <span class="o">=</span> <span class="n">bit_idx_start</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">//calculate whether have &#39;cnt&#39; remain bit,if have ,return the start index 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="n">bit_idx_start</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">while</span><span class="p">(</span><span class="n">bit_left</span><span class="o">--</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="nf">bitmap_scan_test</span><span class="p">(</span><span class="n">btmp</span><span class="p">,</span><span class="n">bit_next</span><span class="p">))){</span>
+</span></span><span class="line"><span class="cl">			<span class="c1">// the bit of &#39;bit_next&#39; is not use , so continue calculate
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="n">count</span> <span class="o">++</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span><span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="c1">// the bit of &#39;bit_next&#39; is use ,so restart
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="n">count</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="n">count</span> <span class="o">==</span> <span class="n">cnt</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">			<span class="n">bit_idx_start</span> <span class="o">=</span> <span class="n">bit_next</span> <span class="o">-</span> <span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="n">bit_next</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">bit_idx_start</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// set the &#39;bit_idx&#39; bit in the bitmap to &#39;value&#39;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">bitmap_set</span><span class="p">(</span><span class="k">struct</span> <span class="n">bitmap</span><span class="o">*</span> <span class="n">btmp</span> <span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">bit_idx</span> <span class="p">,</span> <span class="kt">int8_t</span> <span class="n">value</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">ASSERT</span><span class="p">((</span><span class="n">value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">||</span> <span class="p">(</span><span class="n">value</span> <span class="o">==</span> <span class="mi">1</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">byte_idx</span> <span class="o">=</span> <span class="n">bit_idx</span> <span class="o">/</span> <span class="mi">8</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">bit_odd</span>  <span class="o">=</span> <span class="n">bit_idx</span> <span class="o">%</span> <span class="mi">8</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">value</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="n">btmp</span><span class="o">-&gt;</span><span class="n">bits</span><span class="p">[</span><span class="n">byte_idx</span><span class="p">]</span> <span class="o">|=</span> <span class="p">(</span><span class="n">BITMAP_MASK</span> <span class="o">&lt;&lt;</span> <span class="n">bit_odd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span><span class="k">else</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">btmp</span><span class="o">-&gt;</span><span class="n">bits</span><span class="p">[</span><span class="n">byte_idx</span><span class="p">]</span> <span class="o">&amp;=</span> <span class="p">(</span><span class="n">BITMAP_MASK</span> <span class="o">&lt;&lt;</span> <span class="n">bit_odd</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="2内存管理系统">2.内存管理系统</h3>
+<h4 id="1内存池规划">1.内存池规划：</h4>
+<h5 id="a物理内存池规划">a.物理内存池规划：</h5>
+<p>​	因为内核和用户进程都是运行在物理内存中，为了内核的正常运行，必须要给内核预留足够的内存，所以我们将物理内存划分成两部分，也就是分成俩个内存池，一个内核物理内存池，一个用户物理内存池。为了方便实现，这里我们将两个物理内存池大小设置为<strong>相同</strong>大小，即各占一半。</p>
+<p>​	kernel/memory.c:物理内存池定义，同时定义内核物理内存池和用户物理内存池实例。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">pool</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">bitmap</span> <span class="n">pool_bitmap</span><span class="p">;</span>			<span class="c1">//to manage the physic memory
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">uint32_t</span> <span class="n">phy_addr_start</span><span class="p">;</span>			<span class="c1">//the start of physic memory to manage
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">uint32_t</span> <span class="n">pool_size</span><span class="p">;</span>				<span class="c1">//the size of pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">pool</span> <span class="n">kernel_pool</span><span class="p">,</span><span class="n">user_pool</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="b虚拟内存池规划">b.虚拟内存池规划：</h5>
+<p>​	在32位环境下，虚拟内存空间可以达到4GB，由于分页机制下，每个用户进程都有自己的4GB虚拟内存空间，各个用户进程以及内核的虚拟地址可以相同(当然，物理地址肯定不相同，这是分页机制完成的)，同时虚拟内存通常是连续的，但是物理内存可以连续也可以不连续。每个用户进程都应该有自己的虚拟内存池，用来映射对应的物理内存池。内核毫无疑问也是必须要有自己的虚拟内存池，即<strong>一个任务一个虚拟内存池</strong>。（注：这里我们先实现内核虚拟内存池，其他的将在以后实现用户进程时补充）。</p>
+<p>​	kernel/memory.h:虚拟内存池定义</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//virtual address pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">struct</span> <span class="n">virtual_addr</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">bitmap</span> <span class="n">vaddr_bitmap</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">vaddr_start</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>​	kernel/memory.c:定义了内存虚拟内存池实例</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">virtual_addr</span> <span class="n">kernel_vaddr</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="2位图的位置">2.位图的位置：</h4>
+<p>这里需要拓展一下PCB的知识：</p>
+<ul>
+<li>任何进程都必须包含一个PCB，PCB必须完整，单独的占用一个物理页，也就是4kb。</li>
+<li>PCB的最低处是包含线程或进程的信息，如pid，线程状态等，最高处是线程或进程在0特权级下使用的栈。</li>
+</ul>
+<p>在loader中我们设置内核使用的栈顶是0xc009f000(对应物理地址0x9f000)，因此可以推断0xc009e000是将来内核主线程的pcb。</p>
+<p>​	一个页框大小为4kb，一个大小为页框的位图可表示128mb(4k X 4k X 8)，所以位图位置安排在0xc009a000，这样刚好是四个页框，可以表示512mb(其实一个页框就够了)，这样位图就位于低端1mb中(0x100000)之下了(可以不用位图管理自己了)。</p>
+<p>kernel/memory.c:位图的地址</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#define MEM_BITMAP_BASE 0xc009a000 
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="3初始化物理内存池">3.初始化物理内存池：</h4>
+<p>​	在最初的loader.S中我们将低端1mb之上的0x100000~0x101ff用作了页目录表和页表，所以我们的虚拟内存的0xc0100000~0xc0101ff不映射这部分物理地址，其实就是将物理地址可以开始映射的部分又提高到了0x101ff。</p>
+<p>​	256：一页页目录表，第0和第768个页目录项指向同一个页表算作一页，第769~1022项共254项，总共254+1+1=256</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">page_table_size</span> <span class="o">=</span> <span class="n">PG_SIZE</span> <span class="o">*</span> <span class="mi">256</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">used_mem</span> <span class="o">=</span> <span class="n">page_table_size</span> <span class="o">+</span> <span class="mh">0x100000</span><span class="p">;</span> 
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>kernel/memory.c:</p>
+<p>​	mem_pool_init计算未使用的所有内存，并将三个内存池的位图初始化(置0)</p>
+<p>​	内核物理内存池，用户物理内存池，内核虚拟内存池，依次从0xc009a000(物理内存0x9a000)定义。</p>
+<p>​</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#define K_HEAP_START 0xc0100000
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="c1">//initial memory pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">void</span> <span class="nf">mem_pool_init</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">all_mem</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">put_str</span><span class="p">(</span><span class="s">&#34;  mem_pool_init start</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">page_table_size</span> <span class="o">=</span> <span class="n">PG_SIZE</span> <span class="o">*</span> <span class="mi">256</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">used_mem</span> <span class="o">=</span> <span class="n">page_table_size</span> <span class="o">+</span> <span class="mh">0x100000</span><span class="p">;</span> 
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">free_mem</span> <span class="o">=</span> <span class="n">all_mem</span> <span class="o">-</span> <span class="n">used_mem</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint16_t</span> <span class="n">all_free_pages</span> <span class="o">=</span> <span class="n">free_mem</span> <span class="o">/</span> <span class="n">PG_SIZE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">uint16_t</span> <span class="n">kernel_free_pages</span> <span class="o">=</span> <span class="n">all_free_pages</span> <span class="o">/</span><span class="mi">2</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint16_t</span> <span class="n">user_free_pages</span> <span class="o">=</span> <span class="n">all_free_pages</span> <span class="o">-</span> <span class="n">kernel_free_pages</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// a byte can express 8 pages
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">uint32_t</span> <span class="n">kbm_length</span> <span class="o">=</span> <span class="n">kernel_free_pages</span> <span class="o">/</span> <span class="mi">8</span> <span class="p">;</span>	
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">ubm_length</span> <span class="o">=</span> <span class="n">user_free_pages</span> <span class="o">/</span> <span class="mi">8</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">//kernel pool start address
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">uint32_t</span> <span class="n">kp_start</span> <span class="o">=</span> <span class="n">used_mem</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//user pool start address
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">uint32_t</span> <span class="n">up_start</span> <span class="o">=</span> <span class="n">kp_start</span> <span class="o">+</span> <span class="n">kernel_free_pages</span> <span class="o">*</span> <span class="n">PG_SIZE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">//initial
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="n">kernel_pool</span><span class="p">.</span><span class="n">phy_addr_start</span> <span class="o">=</span> <span class="n">kp_start</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">kernel_pool</span><span class="p">.</span><span class="n">pool_size</span> <span class="o">=</span> <span class="n">kernel_free_pages</span> <span class="o">*</span> <span class="n">PG_SIZE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">kernel_pool</span><span class="p">.</span><span class="n">pool_bitmap</span><span class="p">.</span><span class="n">btmp_bytes_len</span> <span class="o">=</span> <span class="n">kbm_length</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">kernel_pool</span><span class="p">.</span><span class="n">pool_bitmap</span><span class="p">.</span><span class="n">bits</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span> <span class="n">MEM_BITMAP_BASE</span><span class="p">;</span>				<span class="c1">//0x9a000
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="n">user_pool</span><span class="p">.</span><span class="n">phy_addr_start</span> <span class="o">=</span> <span class="n">up_start</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">user_pool</span><span class="p">.</span><span class="n">pool_size</span> <span class="o">=</span> <span class="n">user_free_pages</span> <span class="o">*</span> <span class="n">PG_SIZE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">user_pool</span><span class="p">.</span><span class="n">pool_bitmap</span><span class="p">.</span><span class="n">btmp_bytes_len</span>  <span class="o">=</span><span class="n">ubm_length</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">user_pool</span><span class="p">.</span><span class="n">pool_bitmap</span><span class="p">.</span><span class="n">bits</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)(</span><span class="n">MEM_BITMAP_BASE</span> <span class="o">+</span> <span class="n">kbm_length</span><span class="p">);</span>		<span class="c1">//follow on kernel pool bitmap
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="cm">/*******************print the memory pool information*****************/</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">put_str</span><span class="p">(</span><span class="s">&#34;     kernel_pool_bitmap_start:&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">put_int</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">kernel_pool</span><span class="p">.</span><span class="n">pool_bitmap</span><span class="p">.</span><span class="n">bits</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">put_str</span><span class="p">(</span><span class="s">&#34;  kernel_pool_phy_address_start:&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">put_int</span><span class="p">(</span><span class="n">kernel_pool</span><span class="p">.</span><span class="n">phy_addr_start</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">put_str</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">put_str</span><span class="p">(</span><span class="s">&#34;     user_pool_bitmap_start:&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">put_int</span><span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">user_pool</span><span class="p">.</span><span class="n">pool_bitmap</span><span class="p">.</span><span class="n">bits</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">put_str</span><span class="p">(</span><span class="s">&#34;  user_pool_phy_address_start:&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">put_int</span><span class="p">(</span><span class="n">user_pool</span><span class="p">.</span><span class="n">phy_addr_start</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">put_str</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">//set bitmap to 0
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nf">bitmap_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kernel_pool</span><span class="p">.</span><span class="n">pool_bitmap</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">bitmap_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">user_pool</span><span class="p">.</span><span class="n">pool_bitmap</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="cm">/***************** initial the kernel virtual memory pool************/</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//initial the bitmap of kernel virtual address
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="c1">//used for maintain the kernel virtual address , so the size is equal to kernel pool 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="n">kernel_vaddr</span><span class="p">.</span><span class="n">vaddr_bitmap</span><span class="p">.</span><span class="n">btmp_bytes_len</span> <span class="o">=</span> <span class="n">kbm_length</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">kernel_vaddr</span><span class="p">.</span><span class="n">vaddr_bitmap</span><span class="p">.</span><span class="n">bits</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)(</span><span class="n">MEM_BITMAP_BASE</span> <span class="o">+</span> <span class="n">kbm_length</span> <span class="o">+</span> <span class="n">ubm_length</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">kernel_vaddr</span><span class="p">.</span><span class="n">vaddr_start</span> <span class="o">=</span> <span class="n">K_HEAP_START</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">bitmap_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kernel_vaddr</span><span class="p">.</span><span class="n">vaddr_bitmap</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="nf">put_str</span><span class="p">(</span><span class="s">&#34;  mem_pool_init done </span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">mem_init</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">put_str</span><span class="p">(</span><span class="s">&#34;mem_init start</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">mem_bytes_total</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span> <span class="p">(</span><span class="kt">uint32_t</span><span class="o">*</span><span class="p">)(</span><span class="mh">0xb00</span><span class="p">));</span>				<span class="c1">//set at loader.S 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nf">mem_pool_init</span><span class="p">(</span><span class="n">mem_bytes_total</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">put_str</span><span class="p">(</span><span class="s">&#34;mem_init done</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="4分配页内存重头戏_">4.分配页内存(重头戏&gt;_&lt;)：</h4>
+<h5 id="1内存池标记以及页表项或页目录项属性">1.内存池标记以及页表项或页目录项属性：</h5>
+<p>kernel/memory.h:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//judge use which pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">enum</span> <span class="n">pool_flags</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="n">PF_KERNEL</span> <span class="o">=</span><span class="mi">1</span> <span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="n">PF_USER</span> <span class="o">=</span> <span class="mi">2</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="cp">#define PG_P_1 1 
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define PG_P_0 0 
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define PG_RW_R 0 
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define PG_RW_W 2 
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define PG_US_S 0
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define PG_US_U 4
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>kernel/memory.c:</p>
+<h5 id="1获取pde和pte的索引">1.获取pde和pte的索引：</h5>
+<p>​	开启分页机制后，高10位索引pde，中间10位索引pte。<strong>注意是索引</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#define PDE_IDX(addr) ((addr &amp; 0xffc00000) &gt;&gt; 22)	</span><span class="c1">//get the hight 10 bit
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cp">#define PTE_IDX(addr) ((addr &amp; 0x003ff000) &gt;&gt; 12)	</span><span class="c1">//get the middle 10 bit
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="2申请虚拟内存">2.申请虚拟内存：</h5>
+<p>​	这里仅实现了向内核申请，用户进程部分以后补充</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//apply for &#39;pg_cnt&#39; virtual page in the &#39;pf&#39; virtual memory pool
+</span></span></span><span class="line"><span class="cl"><span class="c1">//success :return the begin of address , failed: return NULL
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">void</span><span class="o">*</span> <span class="nf">vaddr_get</span><span class="p">(</span><span class="k">enum</span> <span class="n">pool_flags</span> <span class="n">pf</span><span class="p">,</span><span class="kt">uint32_t</span> <span class="n">pg_cnt</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">vaddr_start</span> <span class="o">=</span>  <span class="mi">0</span> <span class="p">,</span> <span class="n">bit_idx_start</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">pf</span> <span class="o">==</span> <span class="n">PF_KERNEL</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="n">bit_idx_start</span> <span class="o">=</span> <span class="nf">bitmap_scan</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kernel_vaddr</span><span class="p">.</span><span class="n">vaddr_bitmap</span><span class="p">,</span><span class="n">pg_cnt</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="n">bit_idx_start</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="p">){</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="k">while</span> <span class="p">(</span><span class="n">cnt</span> <span class="o">&lt;</span> <span class="n">pg_cnt</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">bitmap_set</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kernel_vaddr</span><span class="p">.</span><span class="n">vaddr_bitmap</span><span class="p">,</span><span class="n">bit_idx_start</span><span class="o">+</span><span class="n">cnt</span><span class="o">++</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="n">vaddr_start</span> <span class="o">=</span> <span class="n">kernel_vaddr</span><span class="p">.</span><span class="n">vaddr_start</span> <span class="o">+</span> <span class="n">bit_idx_start</span> <span class="o">*</span> <span class="n">PG_SIZE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span><span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// will add in future !!!!!!!!!!!!
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span> <span class="n">vaddr_start</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="3获取指定虚拟内存的页目录项和页表项的地址">3.获取指定虚拟内存的页目录项和页表项的地址：</h5>
+<p>​	超级超级绕的要来了x_x：</p>
+<p>​	<em>先说正常情况：cpu处理32位的虚拟地址，先将高10位作为pde索引，找到对应页表地址，在使用中间10位，索引pte，找到物理页地址，最后用后12位直接用作偏移地址，加上刚才的物理页地址，得到最终物理地址。</em></p>
+<p>​	<em><strong>最初我们设计页目录表时，设计最后一个页目录项是该页目录表的地址！</strong></em></p>
+<pre><code>###### 获取pte指针：
+</code></pre>
+<p>​	因为最后一个页目录项是页目录表的地址，所以我们用第1023项，最后一个页目录项，作为目标虚拟地址的<strong>高10位</strong>，此时地址就为<code>0xffc00000</code>。cpu处理这里完成后以为找到了页表的地址，实际上是页目录表的地址。</p>
+<p>​	然后cpu将使用虚拟地址的中间十位来索引pte，我们需要的是现在cpu来索引pde(因为刚才获取的是页目录表地址)，所以这时就需要参数vaddr的高十位来凑目标虚拟地址的<strong>中间10位</strong>，此时地址就为<code>0xffc00000 +( (vaddr &amp; 0xffc00000 )   &gt;&gt; 10 )</code>。cpu这里完成后以为获取了物理页的地址，实际上是页表的地址。</p>
+<p>​	最后我们需要让cpu索引pte，获取到pte(<strong>注意这里并没有寻址pte中的物理页地址，而是pte本身，所以需要偏移来获取</strong>)，这是cpu会使用低12位来偏移求得目标地址，所以我们使用参数vaddr的pte部分来求偏移，因为是偏移，pte只是索引且pte大小为4byte，所以我们需要手动乘四来凑目标虚拟地址的<strong>最后10位</strong>，此时地址构成为<code>0xffc00000 + ((vaddr &amp; 0xffc00000 ) &gt;&gt; 10 ) + PTE_IDX(vaddr) * 4)</code></p>
+<h6 id="获取pde指针">获取pde指针：</h6>
+<p>​	同上思路一致，这里需要套两层娃，也就是高10位和中间10位均代表最后一个页目录项。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//get the PTE pointer of vaddr;!!!!!
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">uint32_t</span><span class="o">*</span> <span class="nf">pte_ptr</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">vaddr</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">       <span class="kt">uint32_t</span><span class="o">*</span> <span class="n">pte</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uint32_t</span><span class="o">*</span><span class="p">)</span> <span class="p">(</span><span class="mh">0xffc00000</span> <span class="o">+</span> <span class="p">((</span><span class="n">vaddr</span> <span class="o">&amp;</span> <span class="mh">0xffc00000</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">10</span><span class="p">)</span> <span class="o">+</span><span class="nf">PTE_IDX</span><span class="p">(</span><span class="n">vaddr</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span> <span class="p">);</span>
+</span></span><span class="line"><span class="cl">       <span class="k">return</span> <span class="n">pte</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//get the PDE pointer of vaddr;!!!!!
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">uint32_t</span><span class="o">*</span> <span class="nf">pde_ptr</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">vaddr</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span><span class="o">*</span> <span class="n">pde</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uint32_t</span><span class="o">*</span><span class="p">)((</span><span class="mh">0xfffff000</span><span class="p">)</span> <span class="o">+</span> <span class="nf">PDE_IDX</span><span class="p">(</span><span class="n">vaddr</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">pde</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="4申请物理页">4.申请物理页：</h5>
+<p>kernel/memory.c:好理解</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//get the physic page from m_pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">void</span><span class="o">*</span> <span class="nf">palloc</span><span class="p">(</span><span class="k">struct</span> <span class="n">pool</span><span class="o">*</span> <span class="n">m_pool</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">bit_idx</span> <span class="o">=</span> <span class="nf">bitmap_scan</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m_pool</span><span class="o">-&gt;</span><span class="n">pool_bitmap</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">bit_idx</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">bitmap_set</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m_pool</span><span class="o">-&gt;</span><span class="n">pool_bitmap</span><span class="p">,</span><span class="n">bit_idx</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">page_phyaddr</span> <span class="o">=</span> <span class="p">((</span><span class="n">bit_idx</span> <span class="o">*</span> <span class="n">PG_SIZE</span><span class="p">)</span> <span class="o">+</span> <span class="n">m_pool</span><span class="o">-&gt;</span><span class="n">phy_addr_start</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span><span class="n">page_phyaddr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="5虚拟地址和物理地址的映射">5.虚拟地址和物理地址的映射：</h5>
+<p>kernel/memory.c:</p>
+<p>​	需要注意的点是，页目录项(*pde)必须先于页表项(*pte)存在，也就是说必须要先创建好了页表，才能有对应的物理页存在，不然就会缺页中断。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//make the map of _vaddr and _page_phyaddr in page table
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">void</span> <span class="nf">page_table_add</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">_vaddr</span><span class="p">,</span> <span class="kt">void</span><span class="o">*</span> <span class="n">_page_phyaddr</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">vaddr</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uint32_t</span><span class="p">)</span> <span class="n">_vaddr</span><span class="p">,</span><span class="n">page_phyaddr</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uint32_t</span><span class="p">)</span> <span class="n">_page_phyaddr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span><span class="o">*</span> <span class="n">pde</span> <span class="o">=</span> <span class="nf">pde_ptr</span><span class="p">(</span><span class="n">vaddr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span><span class="o">*</span> <span class="n">pte</span> <span class="o">=</span> <span class="nf">pte_ptr</span><span class="p">(</span><span class="n">vaddr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// execute *pte must after pde had create,otherwise wile Page_Fault
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span><span class="p">(</span><span class="o">*</span><span class="n">pde</span> <span class="o">&amp;</span> <span class="mh">0x00000001</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">//make sure pte is not exist 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nf">ASSERT</span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="o">*</span><span class="n">pte</span> <span class="o">&amp;</span> <span class="mh">0x00000001</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="o">*</span><span class="n">pte</span> <span class="o">&amp;</span> <span class="mh">0x00000001</span><span class="p">)){</span>
+</span></span><span class="line"><span class="cl">			<span class="o">*</span><span class="n">pte</span> <span class="o">=</span> <span class="p">(</span><span class="n">page_phyaddr</span> <span class="o">|</span> <span class="n">PG_US_U</span> <span class="o">|</span> <span class="n">PG_RW_W</span> <span class="o">|</span> <span class="n">PG_P_1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span><span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">PANIC</span><span class="p">(</span><span class="s">&#34;pte repeat&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="o">*</span><span class="n">pte</span> <span class="o">=</span> <span class="p">(</span><span class="n">page_phyaddr</span> <span class="o">|</span> <span class="n">PG_US_U</span> <span class="o">|</span> <span class="n">PG_RW_W</span> <span class="o">|</span> <span class="n">PG_P_1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span><span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">//pde wasn&#39;t exist ,so create pde first
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="kt">uint32_t</span> <span class="n">pde_phyaddr</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uint32_t</span><span class="p">)</span> <span class="nf">palloc</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kernel_pool</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="o">*</span><span class="n">pde</span> <span class="o">=</span> <span class="p">(</span><span class="n">pde_phyaddr</span> <span class="o">|</span> <span class="n">PG_US_U</span> <span class="o">|</span> <span class="n">PG_RW_W</span> <span class="o">|</span> <span class="n">PG_P_1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">memset</span><span class="p">((</span><span class="kt">void</span><span class="o">*</span><span class="p">)((</span><span class="kt">int</span><span class="p">)</span><span class="n">pte</span> <span class="o">&amp;</span> <span class="mh">0xfffff000</span><span class="p">)</span> <span class="p">,</span> <span class="mi">0</span> <span class="p">,</span> <span class="n">PG_SIZE</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		
+</span></span><span class="line"><span class="cl">		<span class="nf">ASSERT</span><span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="o">*</span><span class="n">pte</span> <span class="o">&amp;</span> <span class="mh">0x00000001</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">		<span class="o">*</span><span class="n">pte</span> <span class="o">=</span> <span class="p">(</span><span class="n">page_phyaddr</span> <span class="o">|</span> <span class="n">PG_US_U</span> <span class="o">|</span> <span class="n">PG_RW_W</span> <span class="o">|</span> <span class="n">PG_P_1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="6分配指定个页空间">6.分配指定个页空间</h5>
+<p>kernel/memory.c:</p>
+<p>分配流程：</p>
+<ul>
+<li>从虚拟内存池中申请虚拟内存(vaddr_get)</li>
+<li>从物理内存池中申请物理地址(palloc)</li>
+<li>进行虚拟地址和物理地址的映射(page_table_add)</li>
+</ul>
+<p>​	get_kernel_pages 是malloc_page的封装。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//malloc &#39;pg_cnt&#39; page memory
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cm">/***********************   malloc_page 	******************
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * 	1.vaddr_get :		apply for virtual memory in virtual memory pool
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * 	2.palloc: 		apply for physic memory in physic memory pool
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * 	3.page_table_add: 	make the map
+</span></span></span><span class="line"><span class="cl"><span class="cm"> ******************************************************************/</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span><span class="o">*</span> <span class="nf">malloc_page</span><span class="p">(</span><span class="k">enum</span> <span class="n">pool_flags</span> <span class="n">pf</span><span class="p">,</span><span class="kt">uint32_t</span> <span class="n">pg_cnt</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">ASSERT</span><span class="p">(</span><span class="n">pg_cnt</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">pg_cnt</span> <span class="o">&lt;</span> <span class="mi">3840</span><span class="p">);</span>		<span class="c1">//here set max is 15*1024*1024 /4096 = 3840 page
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">void</span> <span class="o">*</span> <span class="n">vaddr_start</span> <span class="o">=</span> <span class="nf">vaddr_get</span><span class="p">(</span><span class="n">pf</span><span class="p">,</span><span class="n">pg_cnt</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">vaddr_start</span> <span class="o">==</span> <span class="nb">NULL</span> <span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">vaddr</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uint32_t</span><span class="p">)</span><span class="n">vaddr_start</span> <span class="p">,</span> <span class="n">cnt</span> <span class="o">=</span> <span class="n">pg_cnt</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">pool</span><span class="o">*</span> <span class="n">mem_pool</span> <span class="o">=</span> <span class="n">pf</span> <span class="o">&amp;</span> <span class="n">PF_KERNEL</span> <span class="o">?</span> <span class="o">&amp;</span><span class="nl">kernel_pool</span> <span class="p">:</span> <span class="o">&amp;</span><span class="n">user_pool</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">//physic memory isn&#39;t continuous
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">while</span> <span class="p">(</span><span class="n">cnt</span><span class="o">--</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="kt">void</span> <span class="o">*</span> <span class="n">page_phyaddr</span> <span class="o">=</span> <span class="nf">palloc</span><span class="p">(</span><span class="n">mem_pool</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="n">page_phyaddr</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">			<span class="c1">//physic memory will roll back , will write in future
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">page_table_add</span><span class="p">((</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span><span class="n">vaddr</span><span class="p">,</span><span class="n">page_phyaddr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="n">vaddr</span> <span class="o">+=</span> <span class="n">PG_SIZE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">vaddr_start</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//apply for &#39;pg_cnt&#39;  page in kernel physic memory pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span><span class="o">*</span> <span class="nf">get_kernel_pages</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">pg_cnt</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">void</span><span class="o">*</span> <span class="n">vaddr</span> <span class="o">=</span> <span class="nf">malloc_page</span><span class="p">(</span><span class="n">PF_KERNEL</span><span class="p">,</span><span class="n">pg_cnt</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">vaddr</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">memset</span><span class="p">(</span><span class="n">vaddr</span> <span class="p">,</span> <span class="mi">0</span> <span class="p">,</span> <span class="n">pg_cnt</span> <span class="o">*</span> <span class="n">PG_SIZE</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="n">vaddr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="3总结">3.总结</h3>
+<p><em>虚拟空间巧调度，进程安然各运行。</em></p>
+<p><em>物理资源精分配，内存高效无忧愁。</em></p></div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2024-06-06</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/index.md" target="_blank">Read Markdown</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" data-title="手写OS系列之内存管理" data-hashtags="项目"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" data-hashtag="项目"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" data-title="手写OS系列之内存管理"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" data-title="手写OS系列之内存管理"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" data-title="手写OS系列之内存管理"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E9%A1%B9%E7%9B%AE/">项目</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E4%B8%AD%E6%96%AD/" class="prev" rel="prev" title="手写OS系列之中断"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>手写OS系列之中断</a></div>
+</div>
+<div id="comments"><div id="valine" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://valine.js.org/">Valine</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.120.4">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2023 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">lance</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/valine/valine.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/valine@1.5.0/dist/Valine.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/algoliasearch@4.13.1/dist/algoliasearch-lite.umd.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typeit@8.6.0/dist/index.umd.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"valine":{"appId":"QGzwQXOqs5JOhN4RGPOkR2mR-MdYXbMMI","appKey":"WBmoGyJtbqUswvfLh6L8iEBr","avatar":"mp","el":"#valine","emojiCDN":"https://cdn.jsdelivr.net/npm/emoji-datasource-google@14.0.0/img/google/64/","emojiMaps":{"100":"1f4af.png","alien":"1f47d.png","anger":"1f4a2.png","angry":"1f620.png","anguished":"1f627.png","astonished":"1f632.png","black_heart":"1f5a4.png","blue_heart":"1f499.png","blush":"1f60a.png","bomb":"1f4a3.png","boom":"1f4a5.png","broken_heart":"1f494.png","brown_heart":"1f90e.png","clown_face":"1f921.png","cold_face":"1f976.png","cold_sweat":"1f630.png","confounded":"1f616.png","confused":"1f615.png","cry":"1f622.png","crying_cat_face":"1f63f.png","cupid":"1f498.png","dash":"1f4a8.png","disappointed":"1f61e.png","disappointed_relieved":"1f625.png","dizzy":"1f4ab.png","dizzy_face":"1f635.png","drooling_face":"1f924.png","exploding_head":"1f92f.png","expressionless":"1f611.png","face_vomiting":"1f92e.png","face_with_cowboy_hat":"1f920.png","face_with_hand_over_mouth":"1f92d.png","face_with_head_bandage":"1f915.png","face_with_monocle":"1f9d0.png","face_with_raised_eyebrow":"1f928.png","face_with_rolling_eyes":"1f644.png","face_with_symbols_on_mouth":"1f92c.png","face_with_thermometer":"1f912.png","fearful":"1f628.png","flushed":"1f633.png","frowning":"1f626.png","ghost":"1f47b.png","gift_heart":"1f49d.png","green_heart":"1f49a.png","grimacing":"1f62c.png","grin":"1f601.png","grinning":"1f600.png","hankey":"1f4a9.png","hear_no_evil":"1f649.png","heart":"2764-fe0f.png","heart_decoration":"1f49f.png","heart_eyes":"1f60d.png","heart_eyes_cat":"1f63b.png","heartbeat":"1f493.png","heartpulse":"1f497.png","heavy_heart_exclamation_mark_ornament":"2763-fe0f.png","hole":"1f573-fe0f.png","hot_face":"1f975.png","hugging_face":"1f917.png","hushed":"1f62f.png","imp":"1f47f.png","innocent":"1f607.png","japanese_goblin":"1f47a.png","japanese_ogre":"1f479.png","joy":"1f602.png","joy_cat":"1f639.png","kiss":"1f48b.png","kissing":"1f617.png","kissing_cat":"1f63d.png","kissing_closed_eyes":"1f61a.png","kissing_heart":"1f618.png","kissing_smiling_eyes":"1f619.png","laughing":"1f606.png","left_speech_bubble":"1f5e8-fe0f.png","love_letter":"1f48c.png","lying_face":"1f925.png","mask":"1f637.png","money_mouth_face":"1f911.png","nauseated_face":"1f922.png","nerd_face":"1f913.png","neutral_face":"1f610.png","no_mouth":"1f636.png","open_mouth":"1f62e.png","orange_heart":"1f9e1.png","partying_face":"1f973.png","pensive":"1f614.png","persevere":"1f623.png","pleading_face":"1f97a.png","pouting_cat":"1f63e.png","purple_heart":"1f49c.png","rage":"1f621.png","relaxed":"263a-fe0f.png","relieved":"1f60c.png","revolving_hearts":"1f49e.png","right_anger_bubble":"1f5ef-fe0f.png","robot_face":"1f916.png","rolling_on_the_floor_laughing":"1f923.png","scream":"1f631.png","scream_cat":"1f640.png","see_no_evil":"1f648.png","shushing_face":"1f92b.png","skull":"1f480.png","skull_and_crossbones":"2620-fe0f.png","sleeping":"1f634.png","sleepy":"1f62a.png","slightly_frowning_face":"1f641.png","slightly_smiling_face":"1f642.png","smile":"1f604.png","smile_cat":"1f638.png","smiley":"1f603.png","smiley_cat":"1f63a.png","smiling_face_with_3_hearts":"1f970.png","smiling_imp":"1f608.png","smirk":"1f60f.png","smirk_cat":"1f63c.png","sneezing_face":"1f927.png","sob":"1f62d.png","space_invader":"1f47e.png","sparkling_heart":"1f496.png","speak_no_evil":"1f64a.png","speech_balloon":"1f4ac.png","star-struck":"1f929.png","stuck_out_tongue":"1f61b.png","stuck_out_tongue_closed_eyes":"1f61d.png","stuck_out_tongue_winking_eye":"1f61c.png","sunglasses":"1f60e.png","sweat":"1f613.png","sweat_drops":"1f4a6.png","sweat_smile":"1f605.png","thinking_face":"1f914.png","thought_balloon":"1f4ad.png","tired_face":"1f62b.png","triumph":"1f624.png","two_hearts":"1f495.png","unamused":"1f612.png","upside_down_face":"1f643.png","weary":"1f629.png","white_frowning_face":"2639-fe0f.png","white_heart":"1f90d.png","wink":"1f609.png","woozy_face":"1f974.png","worried":"1f61f.png","yawning_face":"1f971.png","yellow_heart":"1f49b.png","yum":"1f60b.png","zany_face":"1f92a.png","zipper_mouth_face":"1f910.png","zzz":"1f4a4.png"},"enableQQ":false,"highlight":true,"lang":"en","pageSize":10,"placeholder":"Your comment ...","recordIP":true,"serverURLs":"https://leancloud.hugoloveit.com","visitor":true}},"data":{"id-1":"lance's blog","id-2":"lance's blog"},"search":{"algoliaAppID":"PASDMWALPK","algoliaIndex":"index.en","algoliaSearchKey":"b42948e51daaa93df92381c8e2ac0f93","highlightTag":"em","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"algolia"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

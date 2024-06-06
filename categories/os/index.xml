@@ -4,7 +4,15 @@
         <link>https://lance-e.github.io/categories/os/</link>
         <description>os - Category - share knowledge</description>
         <generator>Hugo -- gohugo.io</generator><language>en</language><managingEditor>437653103@qq.com (lance)</managingEditor>
-            <webMaster>437653103@qq.com (lance)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><lastBuildDate>Tue, 04 Jun 2024 17:53:45 &#43;0800</lastBuildDate><atom:link href="https://lance-e.github.io/categories/os/" rel="self" type="application/rss+xml" /><item>
+            <webMaster>437653103@qq.com (lance)</webMaster><copyright>This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.</copyright><lastBuildDate>Thu, 06 Jun 2024 17:59:25 &#43;0800</lastBuildDate><atom:link href="https://lance-e.github.io/categories/os/" rel="self" type="application/rss+xml" /><item>
+    <title>手写OS系列之内存管理</title>
+    <link>https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/</link>
+    <pubDate>Thu, 06 Jun 2024 17:59:25 &#43;0800</pubDate>
+    <author>lance</author>
+    <guid>https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/</guid>
+    <description><![CDATA[内存管理系统]]></description>
+</item>
+<item>
     <title>手写OS系列之中断</title>
     <link>https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E4%B8%AD%E6%96%AD/</link>
     <pubDate>Tue, 04 Jun 2024 17:53:45 &#43;0800</pubDate>
@@ -75,14 +83,6 @@
     <author>lance</author>
     <guid>https://lance-e.github.io/hit_os_lab3/</guid>
     <description><![CDATA[哈工大操作系统lab3]]></description>
-</item>
-<item>
-    <title>Hit_os_lab2</title>
-    <link>https://lance-e.github.io/hit_os_lab2/</link>
-    <pubDate>Mon, 15 Apr 2024 21:01:15 &#43;0800</pubDate>
-    <author>lance</author>
-    <guid>https://lance-e.github.io/hit_os_lab2/</guid>
-    <description><![CDATA[哈工大操作系统lab2]]></description>
 </item>
 </channel>
 </rss>
