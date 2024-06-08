@@ -30,7 +30,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/lance-e.github.io\/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86\/"
-        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "项目","wordcount":  1594 ,
+        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "项目","wordcount":  1593 ,
         "url": "https:\/\/lance-e.github.io\/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86\/","datePublished": "2024-06-06T17:59:25+08:00","dateModified": "2024-06-06T17:59:25+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
             "@type": "Organization",
             "name": "lance","logo": "https:\/\/avatars.githubusercontent.com\/u\/139835134?s=400\u0026u=821ed61ec1049b862844e4b578ccbc46f274d65d\u0026v=4"},"author": {
@@ -110,7 +110,7 @@
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">手写OS系列之内存管理</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>lance</a></span>&nbsp;<span class="post-category">included in <a href="/categories/os/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>os</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-06-06">2024-06-06</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1594 words&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-06-06">2024-06-06</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1593 words&nbsp;
                 <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;8 minutes&nbsp;<span id="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" class="leancloud_visitors" data-flag-title="手写OS系列之内存管理">
                         <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;views
                     </span>&nbsp;</div>
@@ -150,6 +150,7 @@
                 <li><a href="#2申请虚拟内存">2.申请虚拟内存：</a></li>
                 <li><a href="#3获取指定虚拟内存的页目录项和页表项的地址">3.获取指定虚拟内存的页目录项和页表项的地址：</a>
                   <ul>
+                    <li><a href="#获取pte指针">获取pte指针：</a></li>
                     <li><a href="#获取pde指针">获取pde指针：</a></li>
                   </ul>
                 </li>
@@ -724,8 +725,7 @@
 <p>​	超级超级绕的要来了x_x：</p>
 <p>​	<em>先说正常情况：cpu处理32位的虚拟地址，先将高10位作为pde索引，找到对应页表地址，在使用中间10位，索引pte，找到物理页地址，最后用后12位直接用作偏移地址，加上刚才的物理页地址，得到最终物理地址。</em></p>
 <p>​	<em><strong>最初我们设计页目录表时，设计最后一个页目录项是该页目录表的地址！</strong></em></p>
-<pre><code>###### 获取pte指针：
-</code></pre>
+<h6 id="获取pte指针">获取pte指针：</h6>
 <p>​	因为最后一个页目录项是页目录表的地址，所以我们用第1023项，最后一个页目录项，作为目标虚拟地址的<strong>高10位</strong>，此时地址就为<code>0xffc00000</code>。cpu处理这里完成后以为找到了页表的地址，实际上是页目录表的地址。</p>
 <p>​	然后cpu将使用虚拟地址的中间十位来索引pte，我们需要的是现在cpu来索引pde(因为刚才获取的是页目录表地址)，所以这时就需要参数vaddr的高十位来凑目标虚拟地址的<strong>中间10位</strong>，此时地址就为<code>0xffc00000 +( (vaddr &amp; 0xffc00000 )   &gt;&gt; 10 )</code>。cpu这里完成后以为获取了物理页的地址，实际上是页表的地址。</p>
 <p>​	最后我们需要让cpu索引pte，获取到pte(<strong>注意这里并没有寻址pte中的物理页地址，而是pte本身，所以需要偏移来获取</strong>)，这是cpu会使用低12位来偏移求得目标地址，所以我们使用参数vaddr的pte部分来求偏移，因为是偏移，pte只是索引且pte大小为4byte，所以我们需要手动乘四来凑目标虚拟地址的<strong>最后10位</strong>，此时地址构成为<code>0xffc00000 + ((vaddr &amp; 0xffc00000 ) &gt;&gt; 10 ) + PTE_IDX(vaddr) * 4)</code></p>
