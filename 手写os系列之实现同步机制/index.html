@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>手写OS系列之实现同步机制 - share knowledge</title><meta name="Description" content="实现信号量以及基于互斥信号量实现互斥锁"><meta property="og:title" content="手写OS系列之实现同步机制" />
+<meta property="og:description" content="实现信号量以及基于互斥信号量实现互斥锁" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6/" /><meta property="og:image" content="https://lance-e.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-06-11T16:51:41+08:00" />
+<meta property="article:modified_time" content="2024-06-11T16:51:41+08:00" /><meta property="og:site_name" content="lance&#39;s blog" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://lance-e.github.io/logo.png"/>
+
+<meta name="twitter:title" content="手写OS系列之实现同步机制"/>
+<meta name="twitter:description" content="实现信号量以及基于互斥信号量实现互斥锁"/>
+<meta name="application-name" content="lance&#39;s blog">
+<meta name="apple-mobile-web-app-title" content="lance&#39;s blog"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6/" /><link rel="prev" href="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "手写OS系列之实现同步机制",
+        "inLanguage": "en",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/lance-e.github.io\/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6\/"
+        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "项目","wordcount":  416 ,
+        "url": "https:\/\/lance-e.github.io\/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6\/","datePublished": "2024-06-11T16:51:41+08:00","dateModified": "2024-06-11T16:51:41+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
+            "@type": "Organization",
+            "name": "lance","logo": "https:\/\/avatars.githubusercontent.com\/u\/139835134?s=400\u0026u=821ed61ec1049b862844e4b578ccbc46f274d65d\u0026v=4"},"author": {
+                "@type": "Person",
+                "name": "lance"
+            },"description": "实现信号量以及基于互斥信号量实现互斥锁"
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="share knowledge"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw' aria-hidden='true'></i></span><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/categories/documentation/"> Docs </a><a class="menu-item" href="/about/"> About </a><a class="menu-item" href="https://github.com/lance-e" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a><a href="javascript:void(0);" class="menu-item language" title="Select Language">
+                    <i class="fa fa-globe" aria-hidden="true"></i>                      
+                    <select class="language-select" id="language-select-desktop" onchange="location = this.value;"><option value="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6/" selected>English</option></select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="share knowledge"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw' aria-hidden='true'></i></span><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/categories/documentation/" title="">Docs</a><a class="menu-item" href="/about/" title="">About</a><a class="menu-item" href="https://github.com/lance-e" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a><a href="javascript:void(0);" class="menu-item" title="Select Language">
+                    <i class="fa fa-globe fa-fw" aria-hidden="true"></i>
+                    <select class="language-select" onchange="location = this.value;"><option value="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6/" selected>English</option></select>
+                </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">手写OS系列之实现同步机制</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>lance</a></span>&nbsp;<span class="post-category">included in <a href="/categories/os/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>os</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-06-11">2024-06-11</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;416 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;2 minutes&nbsp;<span id="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6/" class="leancloud_visitors" data-flag-title="手写OS系列之实现同步机制">
+                        <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;views
+                    </span>&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1相关概念">1.相关概念</a></li>
+        <li><a href="#2实现线程的阻塞与唤醒">2.实现线程的阻塞与唤醒</a></li>
+        <li><a href="#3实现信号量和互斥锁">3.实现信号量和互斥锁</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h1 id="手写os系列之实现同步机制">手写OS系列之实现同步机制</h1>
+<h3 id="1相关概念">1.相关概念</h3>
+<p>​	公共资源：就是被所有任务共享的一套资源</p>
+<p>​	临界区：若多个任务都想访问同一公共资源，那么各任务中<strong>访问公共资源的指令代码组成的区域</strong> 就称为临界区。(强调是指令，不是受访的静态公共资源)</p>
+<p>​	互斥：也可称为排他，即某一时刻公共资源只能被1个任务共享，不允许多个任务同时出现在自己的临界区。</p>
+<p>​	竞争条件：多个任务以互斥态同时进入临界区，对公共资源的访问是以竞争的方式并行的。因此公共资源的最终状态依赖于这些任务的临界区的微操作执行次序</p>
+<p>​	信号量：就是个0以上的整数，当信号量为0时，表示已无可用信号，或者说条件不允许，因此它表示某种信号的累积量，所以称作信号线。当信号量为1时，称作二元信号量或互斥信号量，可以作为锁的实现</p>
+<h3 id="2实现线程的阻塞与唤醒">2.实现线程的阻塞与唤醒</h3>
+<p>thread/thread.c:</p>
+<p>​	阻塞就是将当前运行的线程状态改为阻塞态，并调度新的任务。</p>
+<p>​	唤醒就是将目标线程的重新添加到就绪队列中(这里直接添加到队列头，下一次调度就可以直接执行该线程)，因为调度器每一次调度都是从就绪队列中选取就绪的任务开始执行。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//block thread
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">thread_block</span><span class="p">(</span><span class="k">enum</span> <span class="n">task_status</span> <span class="n">stat</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">ASSERT</span><span class="p">(((</span><span class="n">stat</span> <span class="o">==</span> <span class="n">TASK_BLOCKED</span> <span class="p">)</span><span class="o">||</span><span class="p">(</span><span class="n">stat</span> <span class="o">==</span><span class="n">TASK_WAITING</span><span class="p">)</span> <span class="o">||</span> <span class="p">(</span><span class="n">stat</span> <span class="o">==</span> <span class="n">TASK_HANGING</span><span class="p">)));</span>
+</span></span><span class="line"><span class="cl">	<span class="k">enum</span> <span class="n">intr_status</span> <span class="n">old_status</span>  <span class="o">=</span> <span class="nf">intr_disable</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">task_struct</span><span class="o">*</span> <span class="n">cur_thread</span> <span class="o">=</span> <span class="nf">running_thread</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="n">cur_thread</span><span class="o">-&gt;</span><span class="n">status</span> <span class="o">=</span> <span class="n">stat</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">schedule</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">intr_set_status</span><span class="p">(</span><span class="n">old_status</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//unblock thread
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">thread_unblock</span><span class="p">(</span><span class="k">struct</span> <span class="n">task_struct</span><span class="o">*</span> <span class="n">pthread</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="k">enum</span> <span class="n">intr_status</span> <span class="n">old_status</span> <span class="o">=</span> <span class="nf">intr_disable</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">ASSERT</span><span class="p">(((</span><span class="n">pthread</span><span class="o">-&gt;</span><span class="n">status</span> <span class="o">==</span> <span class="n">TASK_BLOCKED</span><span class="p">)</span> <span class="o">||</span> <span class="p">(</span><span class="n">pthread</span><span class="o">-&gt;</span><span class="n">status</span> <span class="o">==</span> <span class="n">TASK_WAITING</span> <span class="p">)</span><span class="o">||</span><span class="p">(</span><span class="n">pthread</span><span class="o">-&gt;</span><span class="n">status</span> <span class="o">==</span> <span class="n">TASK_HANGING</span><span class="p">)));</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">pthread</span><span class="o">-&gt;</span><span class="n">status</span> <span class="o">!=</span> <span class="n">TASK_READY</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">ASSERT</span><span class="p">(</span><span class="o">!</span><span class="nf">elem_find</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread_ready_list</span><span class="p">,</span><span class="o">&amp;</span><span class="n">pthread</span><span class="o">-&gt;</span><span class="n">general_tag</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="nf">elem_find</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread_ready_list</span><span class="p">,</span><span class="o">&amp;</span><span class="n">pthread</span><span class="o">-&gt;</span><span class="n">general_tag</span><span class="p">)){</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">PANIC</span><span class="p">(</span><span class="s">&#34;thread_unblock: blocked thread in ready_list</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">list_push</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread_ready_list</span><span class="p">,</span><span class="o">&amp;</span><span class="n">pthread</span><span class="o">-&gt;</span><span class="n">general_tag</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="n">pthread</span><span class="o">-&gt;</span><span class="n">status</span> <span class="o">=</span> <span class="n">TASK_READY</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">intr_set_status</span><span class="p">(</span><span class="n">old_status</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="3实现信号量和互斥锁">3.实现信号量和互斥锁</h3>
+<p>锁和信号量的定义：</p>
+<p>thread/sync.h:锁的实现就是互斥信号量，所以锁包含一个初始值为1的信号量</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//struct of semaphore
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">struct</span> <span class="n">semaphore</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint8_t</span> <span class="n">value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">list</span> <span class="n">waiters</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//struct of lock
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">struct</span> <span class="n">lock</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">task_struct</span> <span class="o">*</span> <span class="n">holder</span><span class="p">;</span>				<span class="c1">//holder of lock
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">struct</span> <span class="n">semaphore</span> <span class="n">semaphore</span><span class="p">;</span>				<span class="c1">//mutex semaphore; semaphore = 1 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">uint32_t</span> <span class="n">holder_repeat_nr</span><span class="p">;</span>				<span class="c1">//the number of holder had apply for lock
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>操作：</p>
+<p>thread/sync.c:</p>
+<p>​	分别是初始化信号量，初始化锁，信号量P操作，信号量V操作，获取锁，释放锁</p>
+<p>​	sema_down(P):信号量-1，当信号量=0时，此时就会阻塞线程，并将当前线程添加到等待队列中，直到信号量不为0。</p>
+<p>​	sema_up(V):信号量+1，判断信号量的等待队列是否为空，为空直接+1，不为空代表此时有线程在等待信号量，所以先获取等待队列头的阻塞线程，然后唤醒该线程</p>
+<p>​	lock_acquire:获取锁，若当前线程已经持有该锁，就让holder_repeat_nr+1，这是防止嵌套申请同一把锁导致死锁；若当前线程未持有该锁，就对该锁进行P操作，如果锁在其他线程那里未释放，就暂时阻塞，当上一个持有者释放了锁，就将锁的持有者改为当前线程。</p>
+<p>​	lock_release:释放锁，判断holder_repeat_nr大小，大于1代表当前持有者多次申请锁，不能直接释放锁(V操作)，只能将holder_repeat_nr-1；等于1代表仅申请一次，可以直接释放锁(V操作)。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//initial semaphore 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">sema_init</span><span class="p">(</span><span class="k">struct</span> <span class="n">semaphore</span><span class="o">*</span> <span class="n">psema</span><span class="p">,</span><span class="kt">uint8_t</span> <span class="n">value</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="n">psema</span><span class="o">-&gt;</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">list_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">psema</span><span class="o">-&gt;</span><span class="n">waiters</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//initial lock
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">lock_init</span><span class="p">(</span><span class="k">struct</span> <span class="n">lock</span><span class="o">*</span> <span class="n">plock</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="n">plock</span><span class="o">-&gt;</span><span class="n">holder</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">plock</span><span class="o">-&gt;</span><span class="n">holder_repeat_nr</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">sema_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">plock</span><span class="o">-&gt;</span><span class="n">semaphore</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//semaphore down(-1) :P
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">sema_down</span><span class="p">(</span><span class="k">struct</span> <span class="n">semaphore</span><span class="o">*</span> <span class="n">psema</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="k">enum</span> <span class="n">intr_status</span> <span class="n">old_status</span> <span class="o">=</span> <span class="nf">intr_disable</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="k">while</span><span class="p">(</span><span class="n">psema</span><span class="o">-&gt;</span><span class="n">value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">ASSERT</span><span class="p">(</span><span class="o">!</span><span class="nf">elem_find</span><span class="p">(</span><span class="o">&amp;</span><span class="n">psema</span><span class="o">-&gt;</span><span class="n">waiters</span><span class="p">,</span><span class="o">&amp;</span><span class="nf">running_thread</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">general_tag</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="nf">elem_find</span><span class="p">(</span><span class="o">&amp;</span><span class="n">psema</span><span class="o">-&gt;</span><span class="n">waiters</span><span class="p">,</span><span class="o">&amp;</span><span class="nf">running_thread</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">general_tag</span><span class="p">)){</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">PANIC</span><span class="p">(</span><span class="s">&#34;sema_down: thread blocked has been in waiters_list</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">list_append</span><span class="p">(</span><span class="o">&amp;</span><span class="n">psema</span><span class="o">-&gt;</span><span class="n">waiters</span><span class="p">,</span><span class="o">&amp;</span><span class="nf">running_thread</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">general_tag</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">thread_block</span><span class="p">(</span><span class="n">TASK_BLOCKED</span><span class="p">);</span>			<span class="c1">//block thread,until other thread wake up this blocked thread
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="n">psema</span><span class="o">-&gt;</span><span class="n">value</span><span class="o">--</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">ASSERT</span><span class="p">(</span><span class="n">psema</span><span class="o">-&gt;</span><span class="n">value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">intr_set_status</span><span class="p">(</span><span class="n">old_status</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//semaphore up(+1) :V
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">sema_up</span><span class="p">(</span><span class="k">struct</span> <span class="n">semaphore</span><span class="o">*</span> <span class="n">psema</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="k">enum</span> <span class="n">intr_status</span> <span class="n">old_status</span> <span class="o">=</span> <span class="nf">intr_enable</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">ASSERT</span><span class="p">(</span><span class="n">psema</span><span class="o">-&gt;</span><span class="n">value</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nf">list_empty</span><span class="p">(</span><span class="o">&amp;</span><span class="n">psema</span><span class="o">-&gt;</span><span class="n">waiters</span><span class="p">)){</span>
+</span></span><span class="line"><span class="cl">		<span class="k">struct</span> <span class="n">task_struct</span><span class="o">*</span> <span class="n">thread_blocked</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">task_struct</span><span class="o">*</span><span class="p">)((</span><span class="kt">uint32_t</span><span class="p">)</span><span class="nf">list_pop</span><span class="p">(</span><span class="o">&amp;</span><span class="n">psema</span><span class="o">-&gt;</span><span class="n">waiters</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xfffff000</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">thread_unblock</span><span class="p">(</span><span class="n">thread_blocked</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="n">psema</span><span class="o">-&gt;</span><span class="n">value</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">ASSERT</span><span class="p">(</span><span class="n">psema</span><span class="o">-&gt;</span><span class="n">value</span> <span class="o">==</span><span class="mi">1</span> <span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">intr_set_status</span><span class="p">(</span><span class="n">old_status</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//get lock
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">lock_acquire</span><span class="p">(</span><span class="k">struct</span> <span class="n">lock</span><span class="o">*</span> <span class="n">plock</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">plock</span><span class="o">-&gt;</span><span class="n">holder</span> <span class="o">!=</span> <span class="n">running_thread</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">sema_down</span><span class="p">(</span><span class="o">&amp;</span><span class="n">plock</span><span class="o">-&gt;</span><span class="n">semaphore</span><span class="p">);</span>					<span class="c1">//semaphore :P
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="n">plock</span><span class="o">-&gt;</span><span class="n">holder</span> <span class="o">=</span> <span class="nf">running_thread</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">ASSERT</span><span class="p">(</span><span class="n">plock</span><span class="o">-&gt;</span><span class="n">holder_repeat_nr</span> <span class="o">==</span>  <span class="mi">0</span> <span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="n">plock</span><span class="o">-&gt;</span><span class="n">holder_repeat_nr</span><span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span><span class="k">else</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">plock</span><span class="o">-&gt;</span><span class="n">holder_repeat_nr</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//release lock
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">lock_release</span><span class="p">(</span><span class="k">struct</span> <span class="n">lock</span><span class="o">*</span> <span class="n">plock</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">ASSERT</span><span class="p">(</span><span class="n">plock</span><span class="o">-&gt;</span><span class="n">holder</span> <span class="o">==</span> <span class="nf">running_thread</span><span class="p">());</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">plock</span><span class="o">-&gt;</span><span class="n">holder_repeat_nr</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="n">plock</span><span class="o">-&gt;</span><span class="n">holder_repeat_nr</span><span class="o">--</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">ASSERT</span><span class="p">(</span><span class="n">plock</span><span class="o">-&gt;</span><span class="n">holder_repeat_nr</span> <span class="o">==</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">plock</span><span class="o">-&gt;</span><span class="n">holder</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">plock</span><span class="o">-&gt;</span><span class="n">holder_repeat_nr</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">sema_up</span><span class="p">(</span><span class="o">&amp;</span><span class="n">plock</span><span class="o">-&gt;</span><span class="n">semaphore</span><span class="p">);</span>						<span class="c1">//semaphore :V
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2024-06-11</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6/index.md" target="_blank">Read Markdown</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6/" data-title="手写OS系列之实现同步机制" data-hashtags="项目"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6/" data-hashtag="项目"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6/" data-title="手写OS系列之实现同步机制"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6/" data-title="手写OS系列之实现同步机制"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6/" data-title="手写OS系列之实现同步机制"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E9%A1%B9%E7%9B%AE/">项目</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E5%86%85%E6%A0%B8%E7%BA%A7%E7%BA%BF%E7%A8%8B/" class="prev" rel="prev" title="手写OS系列之实现内核级线程"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>手写OS系列之实现内核级线程</a></div>
+</div>
+<div id="comments"><div id="valine" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://valine.js.org/">Valine</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.120.4">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2023 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">lance</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/valine/valine.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/valine@1.5.0/dist/Valine.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/algoliasearch@4.13.1/dist/algoliasearch-lite.umd.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typeit@8.6.0/dist/index.umd.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"valine":{"appId":"QGzwQXOqs5JOhN4RGPOkR2mR-MdYXbMMI","appKey":"WBmoGyJtbqUswvfLh6L8iEBr","avatar":"mp","el":"#valine","emojiCDN":"https://cdn.jsdelivr.net/npm/emoji-datasource-google@14.0.0/img/google/64/","emojiMaps":{"100":"1f4af.png","alien":"1f47d.png","anger":"1f4a2.png","angry":"1f620.png","anguished":"1f627.png","astonished":"1f632.png","black_heart":"1f5a4.png","blue_heart":"1f499.png","blush":"1f60a.png","bomb":"1f4a3.png","boom":"1f4a5.png","broken_heart":"1f494.png","brown_heart":"1f90e.png","clown_face":"1f921.png","cold_face":"1f976.png","cold_sweat":"1f630.png","confounded":"1f616.png","confused":"1f615.png","cry":"1f622.png","crying_cat_face":"1f63f.png","cupid":"1f498.png","dash":"1f4a8.png","disappointed":"1f61e.png","disappointed_relieved":"1f625.png","dizzy":"1f4ab.png","dizzy_face":"1f635.png","drooling_face":"1f924.png","exploding_head":"1f92f.png","expressionless":"1f611.png","face_vomiting":"1f92e.png","face_with_cowboy_hat":"1f920.png","face_with_hand_over_mouth":"1f92d.png","face_with_head_bandage":"1f915.png","face_with_monocle":"1f9d0.png","face_with_raised_eyebrow":"1f928.png","face_with_rolling_eyes":"1f644.png","face_with_symbols_on_mouth":"1f92c.png","face_with_thermometer":"1f912.png","fearful":"1f628.png","flushed":"1f633.png","frowning":"1f626.png","ghost":"1f47b.png","gift_heart":"1f49d.png","green_heart":"1f49a.png","grimacing":"1f62c.png","grin":"1f601.png","grinning":"1f600.png","hankey":"1f4a9.png","hear_no_evil":"1f649.png","heart":"2764-fe0f.png","heart_decoration":"1f49f.png","heart_eyes":"1f60d.png","heart_eyes_cat":"1f63b.png","heartbeat":"1f493.png","heartpulse":"1f497.png","heavy_heart_exclamation_mark_ornament":"2763-fe0f.png","hole":"1f573-fe0f.png","hot_face":"1f975.png","hugging_face":"1f917.png","hushed":"1f62f.png","imp":"1f47f.png","innocent":"1f607.png","japanese_goblin":"1f47a.png","japanese_ogre":"1f479.png","joy":"1f602.png","joy_cat":"1f639.png","kiss":"1f48b.png","kissing":"1f617.png","kissing_cat":"1f63d.png","kissing_closed_eyes":"1f61a.png","kissing_heart":"1f618.png","kissing_smiling_eyes":"1f619.png","laughing":"1f606.png","left_speech_bubble":"1f5e8-fe0f.png","love_letter":"1f48c.png","lying_face":"1f925.png","mask":"1f637.png","money_mouth_face":"1f911.png","nauseated_face":"1f922.png","nerd_face":"1f913.png","neutral_face":"1f610.png","no_mouth":"1f636.png","open_mouth":"1f62e.png","orange_heart":"1f9e1.png","partying_face":"1f973.png","pensive":"1f614.png","persevere":"1f623.png","pleading_face":"1f97a.png","pouting_cat":"1f63e.png","purple_heart":"1f49c.png","rage":"1f621.png","relaxed":"263a-fe0f.png","relieved":"1f60c.png","revolving_hearts":"1f49e.png","right_anger_bubble":"1f5ef-fe0f.png","robot_face":"1f916.png","rolling_on_the_floor_laughing":"1f923.png","scream":"1f631.png","scream_cat":"1f640.png","see_no_evil":"1f648.png","shushing_face":"1f92b.png","skull":"1f480.png","skull_and_crossbones":"2620-fe0f.png","sleeping":"1f634.png","sleepy":"1f62a.png","slightly_frowning_face":"1f641.png","slightly_smiling_face":"1f642.png","smile":"1f604.png","smile_cat":"1f638.png","smiley":"1f603.png","smiley_cat":"1f63a.png","smiling_face_with_3_hearts":"1f970.png","smiling_imp":"1f608.png","smirk":"1f60f.png","smirk_cat":"1f63c.png","sneezing_face":"1f927.png","sob":"1f62d.png","space_invader":"1f47e.png","sparkling_heart":"1f496.png","speak_no_evil":"1f64a.png","speech_balloon":"1f4ac.png","star-struck":"1f929.png","stuck_out_tongue":"1f61b.png","stuck_out_tongue_closed_eyes":"1f61d.png","stuck_out_tongue_winking_eye":"1f61c.png","sunglasses":"1f60e.png","sweat":"1f613.png","sweat_drops":"1f4a6.png","sweat_smile":"1f605.png","thinking_face":"1f914.png","thought_balloon":"1f4ad.png","tired_face":"1f62b.png","triumph":"1f624.png","two_hearts":"1f495.png","unamused":"1f612.png","upside_down_face":"1f643.png","weary":"1f629.png","white_frowning_face":"2639-fe0f.png","white_heart":"1f90d.png","wink":"1f609.png","woozy_face":"1f974.png","worried":"1f61f.png","yawning_face":"1f971.png","yellow_heart":"1f49b.png","yum":"1f60b.png","zany_face":"1f92a.png","zipper_mouth_face":"1f910.png","zzz":"1f4a4.png"},"enableQQ":false,"highlight":true,"lang":"en","pageSize":10,"placeholder":"Your comment ...","recordIP":true,"serverURLs":"https://leancloud.hugoloveit.com","visitor":true}},"data":{"id-1":"lance's blog","id-2":"lance's blog"},"search":{"algoliaAppID":"PASDMWALPK","algoliaIndex":"index.en","algoliaSearchKey":"b42948e51daaa93df92381c8e2ac0f93","highlightTag":"em","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"algolia"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
