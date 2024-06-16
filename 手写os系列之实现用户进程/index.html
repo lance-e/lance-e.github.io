@@ -30,7 +30,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/lance-e.github.io\/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E7%94%A8%E6%88%B7%E8%BF%9B%E7%A8%8B\/"
-        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "项目","wordcount":  2251 ,
+        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "项目","wordcount":  2250 ,
         "url": "https:\/\/lance-e.github.io\/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E7%94%A8%E6%88%B7%E8%BF%9B%E7%A8%8B\/","datePublished": "2024-06-16T17:42:23+08:00","dateModified": "2024-06-16T17:42:23+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
             "@type": "Organization",
             "name": "lance","logo": "https:\/\/avatars.githubusercontent.com\/u\/139835134?s=400\u0026u=821ed61ec1049b862844e4b578ccbc46f274d65d\u0026v=4"},"author": {
@@ -110,7 +110,7 @@
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">手写OS系列之实现用户进程</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>lance</a></span>&nbsp;<span class="post-category">included in <a href="/categories/os/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>os</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-06-16">2024-06-16</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;2251 words&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-06-16">2024-06-16</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;2250 words&nbsp;
                 <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;11 minutes&nbsp;<span id="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E7%94%A8%E6%88%B7%E8%BF%9B%E7%A8%8B/" class="leancloud_visitors" data-flag-title="手写OS系列之实现用户进程">
                         <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;views
                     </span>&nbsp;</div>
@@ -850,9 +850,9 @@
 <p><code>process_execute()    --&gt;  init_thread() --&gt; create_user_vaddr_bitmap() 创建用户进程的虚拟内存池  --&gt; thread_create()  --&gt;  create_page_dir() 创建用户进程的页目录表 --&gt;  把进程添加到就绪队列和全部任务队列</code></p>
 <p>​	可以看到用户进程的创建过程与线程创建过程几乎一致，唯一的区别就是进程需要多进行页目录表的创建和虚拟内存池的初始化。</p>
 <p>创建流程用到的函数：注意thread_create中的参数start_process，将会在下一节介绍，用于开始进程。</p>
-<p>!create_page_dir!:</p>
+<p>create_page_dir:</p>
 <ul>
-<li>**实现了让所有进程共享内核空间，也就是通过将内核页目录表中的的内核态页目录项(第768~1023项，最后的256项)，复制到所有进程的内核态页目录项 **</li>
+<li><strong>实现了让所有进程共享内核空间，也就是通过将内核页目录表中的的内核态页目录项(第768~1023项，最后的256项)，复制到所有进程的内核态页目录项</strong></li>
 <li><strong>将页目录表的最后一项初始化为页目录表的物理地址，用于找到页目录表的位置，因为可能进程运行过程中存在页表操作</strong></li>
 </ul>
 <div class="highlight"><div class="chroma">
