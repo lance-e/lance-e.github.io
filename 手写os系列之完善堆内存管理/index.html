@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>手写OS系列之完善堆内存管理 - share knowledge</title><meta name="Description" content="支持更细粒度的内存分配，支持内存回收"><meta property="og:title" content="手写OS系列之完善堆内存管理" />
+<meta property="og:description" content="支持更细粒度的内存分配，支持内存回收" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%8C%E5%96%84%E5%A0%86%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" /><meta property="og:image" content="https://lance-e.github.io/logo.png"/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2024-07-09T21:38:42+08:00" />
+<meta property="article:modified_time" content="2024-07-09T21:38:42+08:00" /><meta property="og:site_name" content="lance&#39;s blog" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://lance-e.github.io/logo.png"/>
+
+<meta name="twitter:title" content="手写OS系列之完善堆内存管理"/>
+<meta name="twitter:description" content="支持更细粒度的内存分配，支持内存回收"/>
+<meta name="application-name" content="lance&#39;s blog">
+<meta name="apple-mobile-web-app-title" content="lance&#39;s blog"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%8C%E5%96%84%E5%A0%86%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" /><link rel="prev" href="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E7%94%A8%E6%88%B7%E8%BF%9B%E7%A8%8B/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "手写OS系列之完善堆内存管理",
+        "inLanguage": "en",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https:\/\/lance-e.github.io\/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%8C%E5%96%84%E5%A0%86%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86\/"
+        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "项目","wordcount":  1385 ,
+        "url": "https:\/\/lance-e.github.io\/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%8C%E5%96%84%E5%A0%86%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86\/","datePublished": "2024-07-09T21:38:42+08:00","dateModified": "2024-07-09T21:38:42+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
+            "@type": "Organization",
+            "name": "lance","logo": "https:\/\/avatars.githubusercontent.com\/u\/139835134?s=400\u0026u=821ed61ec1049b862844e4b578ccbc46f274d65d\u0026v=4"},"author": {
+                "@type": "Person",
+                "name": "lance"
+            },"description": "支持更细粒度的内存分配，支持内存回收"
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="share knowledge"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw' aria-hidden='true'></i></span><span id="id-1" class="typeit"></span></a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/categories/documentation/"> Docs </a><a class="menu-item" href="/about/"> About </a><a class="menu-item" href="https://github.com/lance-e" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a><a href="javascript:void(0);" class="menu-item language" title="Select Language">
+                    <i class="fa fa-globe" aria-hidden="true"></i>                      
+                    <select class="language-select" id="language-select-desktop" onchange="location = this.value;"><option value="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%8C%E5%96%84%E5%A0%86%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" selected>English</option></select>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="share knowledge"><span class="header-title-pre"><i class='far fa-kiss-wink-heart fa-fw' aria-hidden='true'></i></span><span id="id-2" class="typeit"></span></a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/categories/documentation/" title="">Docs</a><a class="menu-item" href="/about/" title="">About</a><a class="menu-item" href="https://github.com/lance-e" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a><a href="javascript:void(0);" class="menu-item" title="Select Language">
+                    <i class="fa fa-globe fa-fw" aria-hidden="true"></i>
+                    <select class="language-select" onchange="location = this.value;"><option value="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%8C%E5%96%84%E5%A0%86%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" selected>English</option></select>
+                </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">手写OS系列之完善堆内存管理</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>lance</a></span>&nbsp;<span class="post-category">included in <a href="/categories/os/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>os</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-07-09">2024-07-09</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1385 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;7 minutes&nbsp;<span id="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%8C%E5%96%84%E5%A0%86%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" class="leancloud_visitors" data-flag-title="手写OS系列之完善堆内存管理">
+                        <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;views
+                    </span>&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#1实现动态分配内存">1.实现动态分配内存</a>
+          <ul>
+            <li>
+              <ul>
+                <li><a href="#a相关数据结构">a.相关数据结构</a></li>
+                <li><a href="#b初始化">b.初始化</a></li>
+                <li><a href="#c内存操作">c.内存操作</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li><a href="#2实现内存回收">2.实现内存回收</a>
+          <ul>
+            <li>
+              <ul>
+                <li><a href="#a实现页框级别内存回收">a.实现页框级别内存回收</a></li>
+                <li><a href="#b实现任意字节内存回收">b.实现任意字节内存回收</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+        <li><a href="#3总结">3.总结</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h1 id="手写os系列之完善堆内存管理">手写OS系列之完善堆内存管理</h1>
+<h3 id="1实现动态分配内存">1.实现动态分配内存</h3>
+<h5 id="a相关数据结构">a.相关数据结构</h5>
+<p>​	引入新名词arena(舞台)：将一大块内存划分成多个小内存，每个小内存之间互不干涉，可以分别管理，这些众多的小内存块就叫做arena，可以理解为内存仓库。arena占一个物理页框，包含元数据和arena中的内存池，内存池中以内存块为单位进行划分内存。</p>
+<p>​	arena元数据数据结构：</p>
+<ul>
+<li>desc：内存块描述符指针可以间接获取内存块信息。</li>
+<li>cnt：代表内存块数量或页框数</li>
+<li>large：用于判断申请的内存是否是大内存</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//memory repository
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">struct</span> <span class="n">arena</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">mem_block_desc</span><span class="o">*</span> <span class="n">desc</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="c1">// if large =true , cnt is the number of page 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="c1">// if large =false, cnt is the number of memory block
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">uint32_t</span> <span class="n">cnt</span><span class="p">;</span>					
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kt">bool</span> <span class="n">large</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>​	内存块mem_block数据结构：</p>
+<p>只有一个free_elem成员，用来配合内存块描述符中的链表使用。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//memory block
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">struct</span> <span class="n">mem_block</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">list_elem</span> <span class="n">free_elem</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>​	当不断地内存分配之后，将会产生大量的arena，为了更好地管理arena集群，引入内存块描述符(mem_block_desc)数据结构。用于管理同种规格的arena集群，mem_block_desc只包含两个属性，一个是内存块规模，一个是包含所有空闲内存块的链表。</p>
+<p>​	mem_block_desc 数据结构：</p>
+<ul>
+<li>block_size：内存块规模</li>
+<li>block_per_arena：每个arena中的内存块容量</li>
+<li>free_list：空闲内存块链表</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//memory block descriptor
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">struct</span> <span class="n">mem_block_desc</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">block_size</span><span class="p">;</span>				<span class="c1">//size of memory block
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">uint32_t</span> <span class="n">block_per_arena</span><span class="p">;</span>			<span class="c1">//the number of memory block in per arena
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">struct</span> <span class="n">list</span> <span class="n">free_list</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="b初始化">b.初始化</h5>
+<p>​	针对不同的内存申请，我们有不同的处理策略，当申请的内存小于1024字节时，我们使用arena中的内存块，当申请内存大于1024字节时，我们将不会再拆分大内存，而是直接把整块内存分配出去，代码易维护。</p>
+<p>​	(为什么是1024字节？因为arena占一页，元数据会占用内存，所以内存池必定小于4kb，内存块是平均分配的，所以最大的内存块肯定是小于2kb的，我们又是以2的指数来划分，所以最大为1024字节，这里我们仅支持7种规格内存块，16，32，64，128，256，512，1024。)</p>
+<p>​	kernel/memory.c:初始化<strong>内核</strong>7种规格内存块描述符</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">mem_block_desc</span> <span class="n">k_block_descs</span><span class="p">[</span><span class="n">DESC_CNT</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//prepare for malloc :initial the memory block descriptor  
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">block_desc_init</span><span class="p">(</span><span class="k">struct</span> <span class="n">mem_block_desc</span><span class="o">*</span> <span class="n">desc_array</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint16_t</span> <span class="n">index</span> <span class="p">,</span><span class="n">size</span> <span class="o">=</span> <span class="mi">16</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="p">(</span><span class="n">index</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">;</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="n">DESC_CNT</span> <span class="p">;</span> <span class="n">index</span> <span class="o">++</span> <span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="n">desc_array</span><span class="p">[</span><span class="n">index</span><span class="p">].</span><span class="n">block_size</span> <span class="o">=</span> <span class="n">size</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="c1">//initial the number of memory block in arena
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="n">desc_array</span><span class="p">[</span><span class="n">index</span><span class="p">].</span><span class="n">block_per_arena</span> <span class="o">=</span> <span class="p">(</span><span class="n">PG_SIZE</span> <span class="o">-</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">arena</span><span class="p">))</span> <span class="o">/</span> <span class="n">size</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="nf">list_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">desc_array</span><span class="p">[</span><span class="n">index</span><span class="p">].</span><span class="n">free_list</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="n">size</span> <span class="o">*=</span> <span class="mi">2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">mem_init</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nf">block_desc_init</span><span class="p">(</span><span class="n">k_block_descs</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>​	初始化<strong>用户进程</strong>7种规格内存块描述符:</p>
+<p>thread/thread.h:添加用户进程的内存块描述符，因为用户进程有自己专属的虚拟内存空间，所以每个进程有自己的内存块描述符，用来管理自己的虚拟内存。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//the PCB 
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">struct</span> <span class="n">task_struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>						
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">mem_block_desc</span> <span class="n">u_block_desc</span><span class="p">[</span><span class="n">DESC_CNT</span><span class="p">];</span> <span class="c1">//memory block descriptor of user process
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">};</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>userprog/process.c:创建用户进程时，进行初始化</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">// create user process
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">process_execute</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">filename</span> <span class="p">,</span> <span class="kt">char</span><span class="o">*</span> <span class="n">name</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nf">block_desc_init</span><span class="p">(</span><span class="kr">thread</span><span class="o">-&gt;</span><span class="n">u_block_desc</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">	
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="c内存操作">c.内存操作</h5>
+<p>​	相关操作函数：</p>
+<ul>
+<li>arena2block:获取对应arena目标索引处的内存块</li>
+<li>block2arena:获取内存块对应的arena</li>
+<li>sys_malloc:在堆中申请size字节内存。先判断用哪个内存池，用户还是内核，然后根据申请的内存大小，分配页框还是内存块。如果&gt;1024字节，直接向上取整分配页框；如果&lt;1024字节，就分配适配的最小内存块，从内存块描述符中的free_list中直接获取内存块。</li>
+</ul>
+<p><strong>值得注意的是， 当描述符的链表中没有空闲的内存块了，才创建arena，且一个arena的所有内存块都是空闲的，将会回收该arena占用的页框。所以在分配内存块之前，还需要判断，是否有空闲的内存块，没有就创建arena，并将arena中的内存池一块一块地添加进描述符的free_list</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//return the address of &#39;index&#39; in the arena
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="k">struct</span> <span class="n">mem_block</span><span class="o">*</span> <span class="nf">arena2block</span><span class="p">(</span><span class="k">struct</span> <span class="n">arena</span><span class="o">*</span> <span class="n">a</span> <span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">index</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="p">(</span><span class="k">struct</span> <span class="n">mem_block</span><span class="o">*</span><span class="p">)((</span><span class="kt">uint32_t</span><span class="p">)</span><span class="n">a</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">arena</span><span class="p">)</span> <span class="o">+</span> <span class="n">index</span> <span class="o">*</span> <span class="n">a</span><span class="o">-&gt;</span><span class="n">desc</span><span class="o">-&gt;</span><span class="n">block_size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//return the address of which arena &#39;b&#39; at
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="k">struct</span> <span class="n">arena</span><span class="o">*</span> <span class="nf">block2arena</span><span class="p">(</span><span class="k">struct</span> <span class="n">mem_block</span><span class="o">*</span> <span class="n">b</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="p">(</span><span class="k">struct</span> <span class="n">arena</span><span class="o">*</span><span class="p">)((</span><span class="kt">uint32_t</span><span class="p">)</span><span class="n">b</span> <span class="o">&amp;</span> <span class="mh">0xfffff000</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//malloc &#39;size&#39; memory from heap
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span><span class="o">*</span> <span class="nf">sys_malloc</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">size</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="k">enum</span> <span class="n">pool_flags</span> <span class="n">PF</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">pool</span><span class="o">*</span> <span class="n">mem_pool</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">pool_size</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">mem_block_desc</span><span class="o">*</span> <span class="n">descs</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">task_struct</span><span class="o">*</span> <span class="n">cur_thread</span> <span class="o">=</span> <span class="nf">running_thread</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">//judge use which memory pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">(</span><span class="n">cur_thread</span><span class="o">-&gt;</span><span class="n">pgdir</span> <span class="o">==</span> <span class="nb">NULL</span> <span class="p">){</span>				<span class="c1">//kernel memory pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="n">PF</span> <span class="o">=</span> <span class="n">PF_KERNEL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="n">pool_size</span> <span class="o">=</span> <span class="n">kernel_pool</span><span class="p">.</span><span class="n">pool_size</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="n">mem_pool</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">kernel_pool</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="n">descs</span> <span class="o">=</span> <span class="n">k_block_descs</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span><span class="k">else</span> <span class="p">{</span>								<span class="c1">//user process memory pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="n">PF</span> <span class="o">=</span> <span class="n">PF_USER</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="n">pool_size</span> <span class="o">=</span> <span class="n">user_pool</span><span class="p">.</span><span class="n">pool_size</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="n">mem_pool</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">user_pool</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="n">descs</span> <span class="o">=</span> <span class="n">cur_thread</span><span class="o">-&gt;</span><span class="n">u_block_desc</span><span class="p">;</span> 
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">//judge if there is enough capacity
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="n">pool_size</span><span class="p">)){</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">arena</span><span class="o">*</span> <span class="n">a</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">mem_block</span><span class="o">*</span> <span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">lock_acquire</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mem_pool</span><span class="o">-&gt;</span><span class="n">lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	
+</span></span><span class="line"><span class="cl">	<span class="c1">//begin malloc
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">(</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">1024</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="kt">uint32_t</span> <span class="n">page_cnt</span> <span class="o">=</span> <span class="nf">DIV_ROUND_UP</span><span class="p">(</span><span class="n">size</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">arena</span><span class="p">)</span> <span class="p">,</span> <span class="n">PG_SIZE</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="n">a</span> <span class="o">=</span> <span class="nf">malloc_page</span><span class="p">(</span><span class="n">PF</span><span class="p">,</span><span class="n">page_cnt</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="n">a</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">memset</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">0</span> <span class="p">,</span> <span class="n">page_cnt</span> <span class="o">*</span> <span class="n">PG_SIZE</span><span class="p">);</span>		<span class="c1">//clear the malloc memory
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="n">a</span><span class="o">-&gt;</span><span class="n">desc</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="n">a</span><span class="o">-&gt;</span><span class="n">cnt</span> <span class="o">=</span> <span class="n">page_cnt</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="n">a</span><span class="o">-&gt;</span><span class="n">large</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">lock_release</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mem_pool</span><span class="o">-&gt;</span><span class="n">lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="c1">//+1 is mean skip a size of struct arena(meta message)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="k">return</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)(</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>				
+</span></span><span class="line"><span class="cl">		<span class="p">}</span><span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">lock_release</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mem_pool</span><span class="o">-&gt;</span><span class="n">lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="p">}</span><span class="k">else</span> <span class="p">{</span>								
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="c1">//get the kind of block index
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="kt">uint8_t</span> <span class="n">index</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="p">(</span><span class="n">index</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">;</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="n">DESC_CNT</span><span class="p">;</span>  <span class="n">index</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="p">(</span><span class="n">size</span> <span class="o">&lt;=</span> <span class="n">descs</span><span class="p">[</span><span class="n">index</span><span class="p">].</span><span class="n">block_size</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">				<span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		
+</span></span><span class="line"><span class="cl">		<span class="c1">// if the &#39;free_list&#39; already have no available &#39;mem_block&#39;, now create new arena
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">if</span> <span class="p">(</span><span class="nf">list_empty</span><span class="p">(</span><span class="o">&amp;</span><span class="n">descs</span><span class="p">[</span><span class="n">index</span><span class="p">].</span><span class="n">free_list</span><span class="p">)){</span>
+</span></span><span class="line"><span class="cl">			<span class="n">a</span> <span class="o">=</span> <span class="nf">malloc_page</span><span class="p">(</span><span class="n">PF</span> <span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="p">(</span><span class="n">a</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">				<span class="nf">lock_release</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mem_pool</span><span class="o">-&gt;</span><span class="n">lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">				<span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">memset</span><span class="p">(</span><span class="n">a</span> <span class="p">,</span> <span class="mi">0</span> <span class="p">,</span> <span class="n">PG_SIZE</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">			<span class="n">a</span><span class="o">-&gt;</span><span class="n">desc</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">descs</span><span class="p">[</span><span class="n">index</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">			<span class="n">a</span><span class="o">-&gt;</span><span class="n">large</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="n">a</span><span class="o">-&gt;</span><span class="n">cnt</span> <span class="o">=</span> <span class="n">descs</span><span class="p">[</span><span class="n">index</span><span class="p">].</span><span class="n">block_per_arena</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			
+</span></span><span class="line"><span class="cl">			<span class="kt">uint32_t</span> <span class="n">block_index</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">			<span class="k">enum</span> <span class="n">intr_status</span> <span class="n">old_status</span> <span class="o">=</span> <span class="nf">intr_disable</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">			<span class="c1">//begin to split the memory of arena
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="c1">//and add to the &#39;free_list&#39; of memory block descriptor
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="k">for</span> <span class="p">(</span><span class="n">block_index</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">;</span><span class="n">block_index</span> <span class="o">&lt;</span> <span class="n">descs</span><span class="p">[</span><span class="n">index</span><span class="p">].</span><span class="n">block_per_arena</span><span class="p">;</span><span class="n">block_index</span> <span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">				<span class="n">b</span> <span class="o">=</span> <span class="nf">arena2block</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">block_index</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">				<span class="nf">ASSERT</span><span class="p">(</span><span class="o">!</span><span class="nf">elem_find</span><span class="p">(</span><span class="o">&amp;</span><span class="n">a</span><span class="o">-&gt;</span><span class="n">desc</span><span class="o">-&gt;</span><span class="n">free_list</span> <span class="p">,</span> <span class="o">&amp;</span><span class="n">b</span><span class="o">-&gt;</span><span class="n">free_elem</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">				<span class="nf">list_append</span><span class="p">(</span> <span class="o">&amp;</span><span class="n">a</span><span class="o">-&gt;</span><span class="n">desc</span><span class="o">-&gt;</span><span class="n">free_list</span> <span class="p">,</span> <span class="o">&amp;</span><span class="n">b</span><span class="o">-&gt;</span><span class="n">free_elem</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">intr_set_status</span><span class="p">(</span><span class="n">old_status</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		
+</span></span><span class="line"><span class="cl">		<span class="c1">//begin to malloc memory block
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">mem_block</span><span class="o">*</span><span class="p">)(</span><span class="nf">list_pop</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">descs</span><span class="p">[</span><span class="n">index</span><span class="p">].</span><span class="n">free_list</span><span class="p">))</span> <span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">memset</span><span class="p">(</span><span class="n">b</span> <span class="p">,</span> <span class="mi">0</span> <span class="p">,</span> <span class="n">descs</span><span class="p">[</span><span class="n">index</span><span class="p">].</span><span class="n">block_size</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="n">a</span> <span class="o">=</span> <span class="nf">block2arena</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="n">a</span><span class="o">-&gt;</span><span class="n">cnt</span> <span class="o">--</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">lock_release</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mem_pool</span><span class="o">-&gt;</span><span class="n">lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span><span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="2实现内存回收">2.实现内存回收</h3>
+<h5 id="a实现页框级别内存回收">a.实现页框级别内存回收</h5>
+<p>​	内存回收与内存申请的过程相反，回顾内存申请过程：</p>
+<ul>
+<li>vaddr_get:分配虚拟内存，操作对应虚拟内存池位图，置1</li>
+<li>pallc:分配物理地址，操作对应物理内存池位图，置1</li>
+<li>page_table_add:页表中完成虚拟地址到物理地址的映射</li>
+</ul>
+<p>​	内存回收过程：</p>
+<ul>
+<li>pfree:回收物理内存，操作物理内存池位图，置0</li>
+<li>page_table_pte_remove:删除虚拟内存的映射，通过将pte的p位置0，通过invlpg指令更新快表TLB(也可以通过重新加载cr3)</li>
+<li>vaddr_remove:回收虚拟内存，操作虚拟内存池位图，置0</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span><span class="lnt">86
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//free physic memory to physic memory pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">pfree</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">pg_phy_addr</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">pool</span><span class="o">*</span> <span class="n">mem_pool</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">pg_phy_addr</span> <span class="o">&gt;=</span> <span class="n">user_pool</span><span class="p">.</span><span class="n">phy_addr_start</span><span class="p">)</span> <span class="p">{</span>				<span class="c1">//user memory pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="n">mem_pool</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">user_pool</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="n">index</span> <span class="o">=</span> <span class="p">(</span><span class="n">pg_phy_addr</span> <span class="o">-</span> <span class="n">user_pool</span><span class="p">.</span><span class="n">phy_addr_start</span> <span class="p">)</span> <span class="o">/</span> <span class="n">PG_SIZE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span><span class="k">else</span> <span class="p">{</span>									<span class="c1">//kernel memory pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="n">mem_pool</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">kernel_pool</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="n">index</span> <span class="o">=</span> <span class="p">(</span><span class="n">pg_phy_addr</span> <span class="o">-</span> <span class="n">kernel_pool</span><span class="p">.</span><span class="n">phy_addr_start</span><span class="p">)</span> <span class="o">/</span> <span class="n">PG_SIZE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">bitmap_set</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mem_pool</span><span class="o">-&gt;</span><span class="n">pool_bitmap</span> <span class="p">,</span> <span class="n">index</span> <span class="p">,</span> <span class="mi">0</span> <span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//remove the map of &#39;vaddr&#39;, just to remove the pte of &#39;vaddr&#39;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">void</span> <span class="nf">page_table_pte_remove</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">vaddr</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span><span class="o">*</span> <span class="n">pte</span> <span class="o">=</span> <span class="nf">pte_ptr</span><span class="p">(</span><span class="n">vaddr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="o">*</span><span class="n">pte</span> <span class="o">&amp;=</span> <span class="n">PG_P_0</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">asm</span> <span class="k">volatile</span> <span class="p">(</span><span class="s">&#34;invlpg %0&#34;</span><span class="o">:</span> <span class="o">:</span> <span class="s">&#34;m&#34;</span> <span class="p">(</span><span class="n">vaddr</span><span class="p">)</span> <span class="o">:</span> <span class="s">&#34;memory&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//free the &#39;pg_cnt&#39; consecutive pages virtual memory from virtual memory pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">static</span> <span class="kt">void</span> <span class="nf">vaddr_remove</span><span class="p">(</span><span class="k">enum</span> <span class="n">pool_flags</span> <span class="n">pf</span> <span class="p">,</span> <span class="kt">void</span><span class="o">*</span> <span class="n">_vaddr</span> <span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">pg_cnt</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">bit_start_index</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">,</span> <span class="n">vaddr</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uint32_t</span><span class="p">)</span><span class="n">_vaddr</span> <span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">pf</span> <span class="o">==</span> <span class="n">PF_KERNEL</span><span class="p">){</span>				<span class="c1">//kernel virtual memory pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="n">bit_start_index</span> <span class="o">=</span> <span class="p">(</span><span class="n">vaddr</span> <span class="o">-</span> <span class="n">kernel_vaddr</span><span class="p">.</span><span class="n">vaddr_start</span> <span class="p">)</span> <span class="o">/</span> <span class="n">PG_SIZE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">while</span><span class="p">(</span><span class="n">count</span> <span class="o">&lt;</span> <span class="n">pg_cnt</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">bitmap_set</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kernel_vaddr</span><span class="p">.</span><span class="n">vaddr_bitmap</span> <span class="p">,</span> <span class="n">bit_start_index</span><span class="o">+</span> <span class="n">count</span><span class="o">++</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span><span class="k">else</span> <span class="p">{</span>						<span class="c1">//user virtual memory pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">struct</span> <span class="n">task_struct</span> <span class="o">*</span> <span class="n">cur_thread</span> <span class="o">=</span> <span class="nf">running_thread</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">		<span class="n">bit_start_index</span> <span class="o">=</span><span class="p">(</span> <span class="n">vaddr</span> <span class="o">-</span> <span class="n">cur_thread</span><span class="o">-&gt;</span><span class="n">userprog_vaddr</span><span class="p">.</span><span class="n">vaddr_start</span><span class="p">)</span> <span class="o">/</span> <span class="n">PG_SIZE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">while</span> <span class="p">(</span><span class="n">count</span> <span class="o">&lt;</span> <span class="n">pg_cnt</span> <span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">bitmap_set</span><span class="p">(</span><span class="o">&amp;</span><span class="n">cur_thread</span><span class="o">-&gt;</span><span class="n">userprog_vaddr</span><span class="p">.</span><span class="n">vaddr_bitmap</span><span class="p">,</span><span class="n">bit_start_index</span> <span class="o">+</span> <span class="n">count</span><span class="o">++</span> <span class="p">,</span> <span class="mi">0</span> <span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//free &#39;pg_cnt&#39; page memory
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cm">/***********************   mfree_page 	    ******************
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * 	1.vaddr_remove :		free virtual memory into virtual memory pool
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * 	2.pfree: 			free physic memory into  physic memory pool
+</span></span></span><span class="line"><span class="cl"><span class="cm"> * 	3.page_table_pte_remove: 	remvoe the map
+</span></span></span><span class="line"><span class="cl"><span class="cm"> ******************************************************************/</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">mfree_page</span><span class="p">(</span><span class="k">enum</span>  <span class="n">pool_flags</span> <span class="n">pf</span> <span class="p">,</span> <span class="kt">void</span><span class="o">*</span> <span class="n">_vaddr</span> <span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">pg_cnt</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//struct pool* mem_pool;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kt">uint32_t</span> <span class="n">phy_addr</span> <span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">uint32_t</span> <span class="n">vaddr</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uint32_t</span><span class="p">)</span><span class="n">_vaddr</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">ASSERT</span><span class="p">(</span><span class="n">pg_cnt</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">vaddr</span> <span class="o">%</span> <span class="n">PG_SIZE</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="n">phy_addr</span> <span class="o">=</span> <span class="nf">addr_v2p</span><span class="p">(</span><span class="n">vaddr</span><span class="p">);</span> 		<span class="c1">//get the physic memory by the virtual address;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	
+</span></span><span class="line"><span class="cl">	<span class="c1">//make sure the target page is exist at the out of low 1mb , 1kb pdt and 1kb pt
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nf">ASSERT</span><span class="p">(</span> <span class="p">(</span><span class="n">phy_addr</span> <span class="o">%</span> <span class="n">PG_SIZE</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">phy_addr</span> <span class="o">&gt;=</span> <span class="mh">0x102000</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">//judge use which memory pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">(</span><span class="n">phy_addr</span> <span class="o">&gt;=</span> <span class="n">user_pool</span><span class="p">.</span><span class="n">phy_addr_start</span><span class="p">){</span>			<span class="c1">//in user memory pool
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="n">vaddr</span> <span class="o">-=</span> <span class="n">PG_SIZE</span><span class="p">;</span>	
+</span></span><span class="line"><span class="cl">		<span class="k">while</span><span class="p">(</span><span class="n">count</span> <span class="o">&lt;</span> <span class="n">pg_cnt</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">			<span class="n">vaddr</span> <span class="o">+=</span> <span class="n">PG_SIZE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="n">phy_addr</span> <span class="o">=</span> <span class="nf">addr_v2p</span><span class="p">(</span><span class="n">vaddr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">ASSERT</span><span class="p">((</span><span class="n">phy_addr</span> <span class="o">%</span> <span class="n">PG_SIZE</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">phy_addr</span> <span class="o">&gt;=</span> <span class="n">user_pool</span><span class="p">.</span><span class="n">phy_addr_start</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">pfree</span><span class="p">(</span><span class="n">phy_addr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">page_table_pte_remove</span><span class="p">(</span><span class="n">vaddr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="n">count</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span><span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">vaddr</span> <span class="o">-=</span> <span class="n">PG_SIZE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">while</span><span class="p">(</span><span class="n">count</span> <span class="o">&lt;</span> <span class="n">pg_cnt</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">			<span class="n">vaddr</span> <span class="o">+=</span> <span class="n">PG_SIZE</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="n">phy_addr</span> <span class="o">=</span> <span class="nf">addr_v2p</span><span class="p">(</span><span class="n">vaddr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">ASSERT</span><span class="p">((</span><span class="n">phy_addr</span> <span class="o">%</span> <span class="n">PG_SIZE</span> <span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span>	\
+</span></span><span class="line"><span class="cl">			<span class="n">phy_addr</span> <span class="o">&gt;=</span> <span class="n">kernel_pool</span><span class="p">.</span><span class="n">phy_addr_start</span> <span class="o">&amp;&amp;</span>	\
+</span></span><span class="line"><span class="cl">			<span class="n">phy_addr</span> <span class="o">&lt;</span> <span class="n">user_pool</span><span class="p">.</span><span class="n">phy_addr_start</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">pfree</span><span class="p">(</span><span class="n">phy_addr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">page_table_pte_remove</span><span class="p">(</span><span class="n">vaddr</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="n">count</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//clear the target bit of virtual memory&#39;s bitmap
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nf">vaddr_remove</span><span class="p">(</span><span class="n">pf</span> <span class="p">,</span> <span class="n">_vaddr</span> <span class="p">,</span> <span class="n">pg_cnt</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h5 id="b实现任意字节内存回收">b.实现任意字节内存回收</h5>
+<p>​	针对内存&gt;1024，直接使用free_page回收页框</p>
+<p>​	针对内存&lt;1024, 将内存块回收进对应规格内存块描述符的空闲块链表，如果该arena的内存块都是空闲，就回收arena占用的页框。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//free memory &#39;ptr&#39;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">sys_free</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">ptr</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">ASSERT</span><span class="p">(</span> <span class="n">ptr</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="n">ptr</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">		<span class="k">enum</span> <span class="n">pool_flags</span> <span class="n">pf</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">struct</span> <span class="n">pool</span><span class="o">*</span> <span class="n">mem_pool</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="c1">//judge thread of process
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">if</span> <span class="p">(</span><span class="nf">running_thread</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">pgdir</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">ASSERT</span><span class="p">((</span><span class="kt">uint32_t</span><span class="p">)</span><span class="n">ptr</span> <span class="o">&gt;=</span> <span class="n">K_HEAP_START</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="n">pf</span> <span class="o">=</span> <span class="n">PF_KERNEL</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="n">mem_pool</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">kernel_pool</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span><span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="n">pf</span> <span class="o">=</span> <span class="n">PF_USER</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">			<span class="n">mem_pool</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">user_pool</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="nf">lock_acquire</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mem_pool</span><span class="o">-&gt;</span><span class="n">lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">struct</span> <span class="n">mem_block</span><span class="o">*</span> <span class="n">b</span> <span class="o">=</span> <span class="n">ptr</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="k">struct</span> <span class="n">arena</span><span class="o">*</span> <span class="n">a</span> <span class="o">=</span> <span class="nf">block2arena</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="nf">ASSERT</span><span class="p">(</span><span class="n">a</span><span class="o">-&gt;</span><span class="n">large</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">||</span> <span class="n">a</span><span class="o">-&gt;</span><span class="n">large</span> <span class="o">==</span> <span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">(</span><span class="n">a</span><span class="o">-&gt;</span><span class="n">desc</span> <span class="o">==</span> <span class="nb">NULL</span> <span class="o">&amp;&amp;</span> <span class="n">a</span><span class="o">-&gt;</span><span class="n">large</span> <span class="o">==</span> <span class="nb">true</span> <span class="p">){</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">mfree_page</span><span class="p">(</span><span class="n">pf</span> <span class="p">,</span> <span class="n">a</span> <span class="p">,</span> <span class="n">a</span><span class="o">-&gt;</span><span class="n">cnt</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span><span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="c1">//recycle the memory block into free_list
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="nf">list_append</span><span class="p">(</span><span class="o">&amp;</span><span class="n">a</span><span class="o">-&gt;</span><span class="n">desc</span><span class="o">-&gt;</span><span class="n">free_list</span> <span class="p">,</span> <span class="o">&amp;</span><span class="n">b</span><span class="o">-&gt;</span><span class="n">free_elem</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">			<span class="c1">//judge the all block in arena is it all free,
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="c1">//if all free that free the whole arena
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="k">if</span> <span class="p">(</span><span class="o">++</span><span class="n">a</span><span class="o">-&gt;</span><span class="n">cnt</span> <span class="o">==</span> <span class="n">a</span><span class="o">-&gt;</span><span class="n">desc</span><span class="o">-&gt;</span><span class="n">block_per_arena</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">				<span class="kt">uint32_t</span> <span class="n">index</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">				<span class="k">for</span> <span class="p">(</span><span class="n">index</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">;</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="n">a</span><span class="o">-&gt;</span><span class="n">desc</span><span class="o">-&gt;</span><span class="n">block_per_arena</span> <span class="p">;</span> <span class="n">index</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">					<span class="k">struct</span> <span class="n">mem_block</span><span class="o">*</span> <span class="n">b</span> <span class="o">=</span> <span class="nf">arena2block</span><span class="p">(</span><span class="n">a</span> <span class="p">,</span> <span class="n">index</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">					<span class="nf">ASSERT</span><span class="p">(</span><span class="nf">elem_find</span><span class="p">(</span><span class="o">&amp;</span><span class="n">a</span><span class="o">-&gt;</span><span class="n">desc</span><span class="o">-&gt;</span><span class="n">free_list</span> <span class="p">,</span>  <span class="o">&amp;</span><span class="n">b</span><span class="o">-&gt;</span><span class="n">free_elem</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">					<span class="nf">list_remove</span><span class="p">(</span><span class="o">&amp;</span><span class="n">b</span><span class="o">-&gt;</span><span class="n">free_elem</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="nf">mfree_page</span><span class="p">(</span> <span class="n">pf</span> <span class="p">,</span> <span class="n">a</span> <span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">lock_release</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mem_pool</span><span class="o">-&gt;</span><span class="n">lock</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="3总结">3.总结</h3>
+<p>​	至此loong-OS的内存管理基本完成。</p></div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2024-07-09</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"><span>
+                            <a class="link-to-markdown" href="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%8C%E5%96%84%E5%A0%86%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/index.md" target="_blank">Read Markdown</a>
+                        </span></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%8C%E5%96%84%E5%A0%86%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" data-title="手写OS系列之完善堆内存管理" data-hashtags="项目"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%8C%E5%96%84%E5%A0%86%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" data-hashtag="项目"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%8C%E5%96%84%E5%A0%86%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" data-title="手写OS系列之完善堆内存管理"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%8C%E5%96%84%E5%A0%86%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" data-title="手写OS系列之完善堆内存管理"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="https://lance-e.github.io/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%8C%E5%96%84%E5%A0%86%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" data-title="手写OS系列之完善堆内存管理"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/%E9%A1%B9%E7%9B%AE/">项目</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E7%94%A8%E6%88%B7%E8%BF%9B%E7%A8%8B/" class="prev" rel="prev" title="手写OS系列之实现用户进程"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>手写OS系列之实现用户进程</a></div>
+</div>
+<div id="comments"><div id="valine" class="comment"></div><noscript>
+                Please enable JavaScript to view the comments powered by <a href="https://valine.js.org/">Valine</a>.
+            </noscript></div></article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.120.4">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2023 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank">lance</a></span>&nbsp;|&nbsp;<span class="license"><a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="/lib/valine/valine.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/valine@1.5.0/dist/Valine.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/algoliasearch@4.13.1/dist/algoliasearch-lite.umd.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/typeit@8.6.0/dist/index.umd.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{"valine":{"appId":"QGzwQXOqs5JOhN4RGPOkR2mR-MdYXbMMI","appKey":"WBmoGyJtbqUswvfLh6L8iEBr","avatar":"mp","el":"#valine","emojiCDN":"https://cdn.jsdelivr.net/npm/emoji-datasource-google@14.0.0/img/google/64/","emojiMaps":{"100":"1f4af.png","alien":"1f47d.png","anger":"1f4a2.png","angry":"1f620.png","anguished":"1f627.png","astonished":"1f632.png","black_heart":"1f5a4.png","blue_heart":"1f499.png","blush":"1f60a.png","bomb":"1f4a3.png","boom":"1f4a5.png","broken_heart":"1f494.png","brown_heart":"1f90e.png","clown_face":"1f921.png","cold_face":"1f976.png","cold_sweat":"1f630.png","confounded":"1f616.png","confused":"1f615.png","cry":"1f622.png","crying_cat_face":"1f63f.png","cupid":"1f498.png","dash":"1f4a8.png","disappointed":"1f61e.png","disappointed_relieved":"1f625.png","dizzy":"1f4ab.png","dizzy_face":"1f635.png","drooling_face":"1f924.png","exploding_head":"1f92f.png","expressionless":"1f611.png","face_vomiting":"1f92e.png","face_with_cowboy_hat":"1f920.png","face_with_hand_over_mouth":"1f92d.png","face_with_head_bandage":"1f915.png","face_with_monocle":"1f9d0.png","face_with_raised_eyebrow":"1f928.png","face_with_rolling_eyes":"1f644.png","face_with_symbols_on_mouth":"1f92c.png","face_with_thermometer":"1f912.png","fearful":"1f628.png","flushed":"1f633.png","frowning":"1f626.png","ghost":"1f47b.png","gift_heart":"1f49d.png","green_heart":"1f49a.png","grimacing":"1f62c.png","grin":"1f601.png","grinning":"1f600.png","hankey":"1f4a9.png","hear_no_evil":"1f649.png","heart":"2764-fe0f.png","heart_decoration":"1f49f.png","heart_eyes":"1f60d.png","heart_eyes_cat":"1f63b.png","heartbeat":"1f493.png","heartpulse":"1f497.png","heavy_heart_exclamation_mark_ornament":"2763-fe0f.png","hole":"1f573-fe0f.png","hot_face":"1f975.png","hugging_face":"1f917.png","hushed":"1f62f.png","imp":"1f47f.png","innocent":"1f607.png","japanese_goblin":"1f47a.png","japanese_ogre":"1f479.png","joy":"1f602.png","joy_cat":"1f639.png","kiss":"1f48b.png","kissing":"1f617.png","kissing_cat":"1f63d.png","kissing_closed_eyes":"1f61a.png","kissing_heart":"1f618.png","kissing_smiling_eyes":"1f619.png","laughing":"1f606.png","left_speech_bubble":"1f5e8-fe0f.png","love_letter":"1f48c.png","lying_face":"1f925.png","mask":"1f637.png","money_mouth_face":"1f911.png","nauseated_face":"1f922.png","nerd_face":"1f913.png","neutral_face":"1f610.png","no_mouth":"1f636.png","open_mouth":"1f62e.png","orange_heart":"1f9e1.png","partying_face":"1f973.png","pensive":"1f614.png","persevere":"1f623.png","pleading_face":"1f97a.png","pouting_cat":"1f63e.png","purple_heart":"1f49c.png","rage":"1f621.png","relaxed":"263a-fe0f.png","relieved":"1f60c.png","revolving_hearts":"1f49e.png","right_anger_bubble":"1f5ef-fe0f.png","robot_face":"1f916.png","rolling_on_the_floor_laughing":"1f923.png","scream":"1f631.png","scream_cat":"1f640.png","see_no_evil":"1f648.png","shushing_face":"1f92b.png","skull":"1f480.png","skull_and_crossbones":"2620-fe0f.png","sleeping":"1f634.png","sleepy":"1f62a.png","slightly_frowning_face":"1f641.png","slightly_smiling_face":"1f642.png","smile":"1f604.png","smile_cat":"1f638.png","smiley":"1f603.png","smiley_cat":"1f63a.png","smiling_face_with_3_hearts":"1f970.png","smiling_imp":"1f608.png","smirk":"1f60f.png","smirk_cat":"1f63c.png","sneezing_face":"1f927.png","sob":"1f62d.png","space_invader":"1f47e.png","sparkling_heart":"1f496.png","speak_no_evil":"1f64a.png","speech_balloon":"1f4ac.png","star-struck":"1f929.png","stuck_out_tongue":"1f61b.png","stuck_out_tongue_closed_eyes":"1f61d.png","stuck_out_tongue_winking_eye":"1f61c.png","sunglasses":"1f60e.png","sweat":"1f613.png","sweat_drops":"1f4a6.png","sweat_smile":"1f605.png","thinking_face":"1f914.png","thought_balloon":"1f4ad.png","tired_face":"1f62b.png","triumph":"1f624.png","two_hearts":"1f495.png","unamused":"1f612.png","upside_down_face":"1f643.png","weary":"1f629.png","white_frowning_face":"2639-fe0f.png","white_heart":"1f90d.png","wink":"1f609.png","woozy_face":"1f974.png","worried":"1f61f.png","yawning_face":"1f971.png","yellow_heart":"1f49b.png","yum":"1f60b.png","zany_face":"1f92a.png","zipper_mouth_face":"1f910.png","zzz":"1f4a4.png"},"enableQQ":false,"highlight":true,"lang":"en","pageSize":10,"placeholder":"Your comment ...","recordIP":true,"serverURLs":"https://leancloud.hugoloveit.com","visitor":true}},"data":{"id-1":"lance's blog","id-2":"lance's blog"},"search":{"algoliaAppID":"PASDMWALPK","algoliaIndex":"index.en","algoliaSearchKey":"b42948e51daaa93df92381c8e2ac0f93","highlightTag":"em","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"algolia"},"typeit":{"cursorChar":"|","cursorSpeed":1000,"data":{"id-1":["id-1"],"id-2":["id-2"]},"duration":-1,"speed":100}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
