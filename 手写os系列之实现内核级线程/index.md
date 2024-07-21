@@ -253,7 +253,7 @@ struct task_struct* thread_start(char* name,int prio,thread_func function , void
 
 ##### 3.线程执行目标函数的原理^_^：
 
-​	在我们的实现的线程中，线程执行目标函数不是靠的call来执行，我们靠的是ret指令**（为什么这里用ret指令呢？其实是为了后续多线程调度时的switch_to函数中的ret来进行线程的切换）**。ret指令会从栈顶获取返回地址，然后跳转到返回地址。所以我们直接在执行ret指令时，直接在栈顶装入目标函数的地址，这里我们将kernel_thread的偏移地址(段基址=0)载入eip，到时候ret指令就会跳转到kernel_thread函数中。但在kernel_thread看来，是在调用kernel_thread。
+​	在我们的实现的线程中，线程执行目标函数不是靠的call来执行，我们靠的是ret指令**（为什么这里用ret指令呢？其实是为了后续多线程调度时的switch_to函数中的ret来进行线程的切换**。ret指令会从栈顶获取返回地址，然后跳转到返回地址。所以我们直接在执行ret指令时，直接在栈顶装入目标函数的地址，这里我们将kernel_thread的偏移地址(段基址=0)载入eip，到时候ret指令就会跳转到kernel_thread函数中。但在kernel_thread看来，是在调用kernel_thread。
 
 ​	正常的函数调用都是通过call指令，函数中的栈顶应该是返回地址，栈顶之上(高地址)是参数，我们调用kernel_thread函数不是通过call指令，而是通过ret指令，所以不会自动将函数的返回地址压栈，但是kernel_thread中调用``function(func_arg)``，需要kernel_thread的两个参数，这时就会到栈中的esp+4和esp+8处寻找参数，所以在线程栈中有一个``void (*unused_retaddr);``项，就是负责占返回地址那个位置。然后正确获取到参数，就跳转到function。
 
@@ -407,7 +407,7 @@ bool list_empty(struct list* plist){
 
 #### 2.多线程调度
 
-**注意我这一小节就截取重要部分，完整请看项目地址或后面的完整代码部分 ** 
+**注意我这一小节就截取重要部分，完整请看项目地址或后面的完整代码部分** 
 
 ##### a.注册时间中断函数
 
