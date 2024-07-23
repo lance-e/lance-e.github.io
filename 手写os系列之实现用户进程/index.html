@@ -30,7 +30,7 @@
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "https:\/\/lance-e.github.io\/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E7%94%A8%E6%88%B7%E8%BF%9B%E7%A8%8B\/"
-        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "项目","wordcount":  2250 ,
+        },"image": ["https:\/\/lance-e.github.io\/images\/Apple-Devices-Preview.png"],"genre": "posts","keywords": "项目","wordcount":  2248 ,
         "url": "https:\/\/lance-e.github.io\/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E7%94%A8%E6%88%B7%E8%BF%9B%E7%A8%8B\/","datePublished": "2024-06-16T17:42:23+08:00","dateModified": "2024-06-16T17:42:23+08:00","license": "This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.","publisher": {
             "@type": "Organization",
             "name": "lance","logo": "https:\/\/avatars.githubusercontent.com\/u\/139835134?s=400\u0026u=821ed61ec1049b862844e4b578ccbc46f274d65d\u0026v=4"},"author": {
@@ -110,7 +110,7 @@
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">手写OS系列之实现用户进程</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="/" title="Author" rel="author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>lance</a></span>&nbsp;<span class="post-category">included in <a href="/categories/os/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>os</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-06-16">2024-06-16</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;2250 words&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2024-06-16">2024-06-16</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;2248 words&nbsp;
                 <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;11 minutes&nbsp;<span id="/%E6%89%8B%E5%86%99os%E7%B3%BB%E5%88%97%E4%B9%8B%E5%AE%9E%E7%8E%B0%E7%94%A8%E6%88%B7%E8%BF%9B%E7%A8%8B/" class="leancloud_visitors" data-flag-title="手写OS系列之实现用户进程">
                         <i class="far fa-eye fa-fw" aria-hidden="true"></i>&nbsp;<span class=leancloud-visitors-count></span>&nbsp;views
                     </span>&nbsp;</div>
@@ -166,7 +166,7 @@
 <p>​	Local Descriptor Table,，局部描述符表，用于为每个程序单独赋予的一个结构来存储其私有的资源。</p>
 <h4 id="任务切换方式">任务切换方式：</h4>
 <p>​	cpu厂商原生提供了LDT和TSS这两种原生支持，LDT存放任务实体资源(可有可无，可以使用GDT来代替)，TSS保存任务上下文状态，三种特权级栈指针，I/O位图等信息。任务切换的方式有“中断+任务门”，“call或jmp+任务门” 和iretd。</p>
-<p>​	由于每一次任务切换都要重新加载TR寄存器，效率低下，现代操作系统未采用原生提供的任务切换方式，但是由于 **CPU 向高特权级转移时所使用的栈地址，需要提前在TSS中写入 ** ，所以必须要使用TSS。转移到高特权级一般都是在用户模式发生，CPU由低特权级向高特权级转移时，会发生堆栈的转移，当发生中断时，处理器会从当前TSS的SS0和esp0获取用于处理中断的堆栈。因此我们必须创建一个TSS。</p>
+<p>​	由于每一次任务切换都要重新加载TR寄存器，效率低下，现代操作系统未采用原生提供的任务切换方式，但是由于 <strong>CPU 向高特权级转移时所使用的栈地址，需要提前在TSS中写入</strong> ，所以必须要使用TSS。转移到高特权级一般都是在用户模式发生，CPU由低特权级向高特权级转移时，会发生堆栈的转移，当发生中断时，处理器会从当前TSS的SS0和esp0获取用于处理中断的堆栈。因此我们必须创建一个TSS。</p>
 <p>​	<strong>Linux的任务切换方法</strong>：为每个CPU创建一个TSS，在各个CPU上的任务共享一个TSS，每个CPU的TR寄存器保存对应的TSS，ltr指令加载TSS后，该TR寄存器永远指向这一个TSS。任务切换时，只把TSS的SS0和esp0更新为新任务的0特权级栈栈地址和栈指针。</p>
 <h3 id="2定义并初始化tss">2.定义并初始化TSS</h3>
 <h5 id="1kernelglobalh">1.kernel/global.h：</h5>
@@ -1191,7 +1191,7 @@
 </div>
 </div><h3 id="4总结">4.总结</h3>
 <p><em><strong>进程如磅礴大河,浩荡奔腾不息</strong></em></p>
-<p>*** 线程如清泉细流,曲折穿行灵动***</p></div><div class="post-footer" id="post-footer">
+<p><em><strong>线程如清泉细流,曲折穿行灵动</strong></em></p></div><div class="post-footer" id="post-footer">
     <div class="post-info">
         <div class="post-info-line">
             <div class="post-info-mod">
